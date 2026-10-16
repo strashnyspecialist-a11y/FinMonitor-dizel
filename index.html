@@ -12,7 +12,7 @@
 :root{
   --bg:#09090c; --card:#141419; --card2:#1c1c23; --line:#2a2a33;
   --tx:#f3f4f7; --mut:#9b9ca8; --faint:#6d6e7a;
-  --g:#34f08c; --r:#ff4d6d; --acc:#8c7dff;
+  --g:#34f08c; --r:#ff4d6d; --acc:#8c7dff; --warn:#ffc857;
   --glow-g:0 0 14px rgba(52,240,140,.35); --glow-r:0 0 14px rgba(255,77,109,.4);
   --ui:'Manrope',system-ui,sans-serif; --display:'Manrope',system-ui,sans-serif;
 }
@@ -34,8 +34,13 @@ svg{display:block}
   padding:calc(env(safe-area-inset-top) + 16px) 18px calc(env(safe-area-inset-bottom) + 16px);
 }
 .top{display:flex;justify-content:space-between;align-items:baseline}
-.brand{font-weight:800;font-size:18px;letter-spacing:-.01em}
+.brand{font-weight:800;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center}
 .date{font-size:13px;color:var(--mut);text-transform:capitalize}
+.sdot{width:10px;height:10px;border-radius:50%;margin-left:10px;background:var(--faint);box-shadow:0 0 0 6px transparent}
+.sdot.off{display:none}
+.sdot.ok{background:var(--g)}
+.sdot.wait{background:var(--warn)}
+.sdot.err{background:var(--r)}
 .hero{flex:1;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:6px}
 .hero small{font-size:13px;color:var(--mut);font-weight:600}
 .balance{
@@ -144,6 +149,7 @@ h2:first-child{margin-top:0}
 .slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35}
 .slot b,.slot span{position:relative}
 .slot span{font-size:12px;color:var(--mut)}
+.slot .rm{position:absolute;top:8px;right:8px;z-index:1;background:rgba(9,9,12,.75)}
 
 /* sheet */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:flex-end;justify-content:center;z-index:20}
@@ -189,7 +195,7 @@ h2:first-child{margin-top:0}
 </head>
 <body>
 <main class="app" id="home">
-  <header class="top"><div class="brand">Мої витрати</div><div class="date" id="dateNow"></div></header>
+  <header class="top"><div class="brand">Мої витрати<button class="sdot off" id="sdot" aria-label="Стан синхронізації з сервером"></button></div><div class="date" id="dateNow"></div></header>
 
   <section class="hero">
     <small>Баланс</small>
@@ -205,7 +211,7 @@ h2:first-child{margin-top:0}
     <button class="act" id="aVoice"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>Голос<small>Gemini</small></button>
     <button class="act" id="aPhoto"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>Фото<small>Gemini</small></button>
   </section>
-  <input type="file" id="file" accept="image/*" hidden>
+  <input type="file" id="file" accept="image/*" multiple hidden>
   <input type="file" id="fileR" accept="image/*" hidden>
   <input type="file" id="fileO" accept="image/*" hidden>
 
@@ -256,17 +262,28 @@ h2:first-child{margin-top:0}
 <section class="page" id="p-set">
   <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Налаштування</h1></div>
   <div class="pg">
+    <h2>Сервер даних</h2>
+    <label class="f"><span>Адреса сервера</span>
+      <input type="url" id="sSrv" inputmode="url" autocomplete="off" autocapitalize="off" placeholder="https://my-server.example.com">
+      <div class="hint">Усі витрати та заправки зберігаються на цьому сервері. Якщо додаток відкрито з самого сервера, впишіть його адресу.</div>
+    </label>
+    <label class="f"><span>Токен доступу</span>
+      <input type="password" id="sTok" autocomplete="off" placeholder="Той самий, що в TOKEN на сервері">
+    </label>
+    <div class="btns"><button class="btn" id="sSrvTest">Перевірити й синхронізувати</button></div>
+    <p class="hint" id="sStat" style="margin-bottom:6px"></p>
+
     <h2>Gemini AI</h2>
     <label class="f"><span>API ключ</span>
       <input type="password" id="sKey" autocomplete="off" placeholder="AIza...">
-      <div class="hint">Ключ зберігається лише в цьому браузері. Отримати його можна в Google AI Studio.</div>
+      <div class="hint">Ключ зберігається лише в цьому браузері й на сервер не передається. Отримати його можна в Google AI Studio.</div>
     </label>
     <label class="f"><span>Модель</span>
-      <input id="sModel" list="models" placeholder="gemini-2.5-flash">
+      <input id="sModel" list="models" placeholder="gemini-3.8-flash">
       <datalist id="models">
-        <option value="gemini-2.5-flash"><option value="gemini-2.5-flash-lite"><option value="gemini-2.5-pro"><option value="gemini-2.0-flash">
+        <option value="gemini-3.8-flash"></option><option value="gemini-3.5-flash-lite"></option><option value="gemini-3.1-flash-lite"></option><option value="gemini-3.1-pro-preview"></option>
       </datalist>
-      <div class="hint">Оберіть зі списку або впишіть будь-яку назву моделі Gemini.</div>
+      <div class="hint">За замовчуванням gemini-3.8-flash, найновіша стабільна Flash-модель. Можна обрати зі списку або впишіть будь-яку назву моделі Gemini.</div>
     </label>
     <label class="check"><input type="checkbox" id="sSplit"> Розбивати чек на окремі позиції</label>
     <div class="btns"><button class="btn" id="sTest">Перевірити підключення</button></div>
@@ -291,8 +308,9 @@ h2:first-child{margin-top:0}
 <script>
 const $=s=>document.querySelector(s);
 const CATS=['Продукти','Кафе і ресторани','Транспорт','Житло','Здоров’я','Розваги','Одяг','Зв’язок','Подарунки','Освіта','Інше','Зарплата','Інший дохід'];
+const DEF_MODEL='gemini-3.8-flash';
 
-/* storage: localStorage, falls back to memory if blocked */
+/* ---------- storage: localStorage = локальний кеш, джерело правди = сервер ---------- */
 const mem={};
 const store={
   get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},
@@ -300,10 +318,71 @@ const store={
 };
 let tx=JSON.parse(store.get('sp.tx')||'[]');
 let fuel=JSON.parse(store.get('sp.fuel')||'[]');
-const saveFuel=()=>store.set('sp.fuel',JSON.stringify(fuel));
-let cfg=Object.assign({key:'',model:'gemini-2.5-flash',cur:'UAH',split:true,oilLast:null,oilInt:10000},JSON.parse(store.get('sp.cfg')||'{}'));
-const saveTx=()=>store.set('sp.tx',JSON.stringify(tx));
-const saveCfg=()=>store.set('sp.cfg',JSON.stringify(cfg));
+let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,oilLast:null,oilInt:10000,srvUrl:'',srvToken:''},JSON.parse(store.get('sp.cfg')||'{}'));
+/* застарілі моделі (2.x) вимкнено Google, переходимо на актуальну */
+if(/^gemini-2\./.test(cfg.model||'')||!cfg.model)cfg.model=DEF_MODEL;
+const meta=Object.assign({updatedAt:0,dirty:false},JSON.parse(store.get('sp.meta')||'{}'));
+const saveMeta=()=>store.set('sp.meta',JSON.stringify(meta));
+function touch(){meta.updatedAt=Date.now();meta.dirty=true;saveMeta();queuePush()}
+const saveTx=()=>{store.set('sp.tx',JSON.stringify(tx));touch()};
+const saveFuel=()=>{store.set('sp.fuel',JSON.stringify(fuel));touch()};
+const saveCfg=shared=>{store.set('sp.cfg',JSON.stringify(cfg));if(shared)touch()};
+
+/* ---------- sync із сервером ---------- */
+const snapshot=()=>({v:1,updatedAt:meta.updatedAt,tx,fuel,settings:{cur:cfg.cur,oilLast:cfg.oilLast,oilInt:cfg.oilInt}});
+function applyState(s){
+  tx=Array.isArray(s.tx)?s.tx:[];fuel=Array.isArray(s.fuel)?s.fuel:[];
+  const st=s.settings||{};
+  if(st.cur)cfg.cur=st.cur;
+  cfg.oilLast=st.oilLast??null;cfg.oilInt=st.oilInt||10000;
+  store.set('sp.tx',JSON.stringify(tx));store.set('sp.fuel',JSON.stringify(fuel));store.set('sp.cfg',JSON.stringify(cfg));
+  meta.updatedAt=+s.updatedAt||0;meta.dirty=false;saveMeta();
+}
+const srvOn=()=>!!cfg.srvUrl;
+async function srv(path,opt={}){
+  let r;
+  try{
+    r=await fetch(cfg.srvUrl.replace(/\/+$/,'')+path,{...opt,headers:{'Content-Type':'application/json',...(cfg.srvToken?{Authorization:'Bearer '+cfg.srvToken}:{})}});
+  }catch(e){throw new Error('немає зв’язку з сервером')}
+  if(r.status===401)throw new Error('невірний токен доступу');
+  if(!r.ok)throw new Error('помилка сервера '+r.status);
+  return r.json();
+}
+let syncSt='off',syncMsg='',pushT=null,pushing=false;
+const SYNC_TXT={off:'Сервер не підключено. Дані зберігаються лише в цьому браузері.',wait:'Синхронізація…',ok:'Синхронізовано з сервером.'};
+function setSync(st,msg){
+  syncSt=st;syncMsg=msg||'';
+  const d=$('#sdot');if(d){d.className='sdot '+st;d.title=st==='err'?msg:SYNC_TXT[st]}
+  const s=$('#sStat');
+  if(s)s.textContent=st==='err'?`Помилка: ${msg}. Зміни збережено локально й буде надіслано, коли зв’язок з’явиться.`:SYNC_TXT[st];
+}
+function queuePush(){
+  if(!srvOn())return setSync('off');
+  clearTimeout(pushT);setSync('wait');pushT=setTimeout(push,600);
+}
+async function push(){
+  if(!srvOn())return false;
+  if(pushing){queuePush();return false}
+  pushing=true;const sent=meta.updatedAt;let ok=false;
+  try{
+    await srv('/api/state',{method:'PUT',body:JSON.stringify(snapshot())});
+    if(meta.updatedAt===sent){meta.dirty=false;saveMeta();setSync('ok')}else queuePush();
+    ok=true;
+  }catch(e){setSync('err',e.message)}
+  pushing=false;return ok;
+}
+async function pull(){
+  if(!srvOn()){setSync('off');return false}
+  setSync('wait');
+  try{
+    const s=await srv('/api/state');const sv=+s.updatedAt||0;
+    const hasLocal=tx.length||fuel.length||cfg.oilLast!=null;
+    if(!sv&&hasLocal){if(!meta.updatedAt)meta.updatedAt=Date.now();meta.dirty=true;saveMeta();return await push()}
+    if(meta.dirty||sv<meta.updatedAt)return await push();
+    if(sv>meta.updatedAt){applyState(s);renderAll();loadSettings()}
+    setSync('ok');return true;
+  }catch(e){setSync('err',e.message);return false}
+}
 
 /* helpers */
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -388,16 +467,36 @@ document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPage(b.dat
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=closePage);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheet)closePage()});
 window.addEventListener('resize',()=>fitBal());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&srvOn()&&!pushing)pull()});
 $('#q').oninput=renderList;
 $('#period').onchange=renderStats;
+$('#sdot').onclick=async()=>{const ok=await pull();toast(ok?'Синхронізовано з сервером':syncMsg||'Помилка синхронізації',!ok)};
 
 /* ---------- settings ---------- */
 function loadSettings(){
   $('#sKey').value=cfg.key;$('#sModel').value=cfg.model;$('#sCur').value=cfg.cur;$('#sSplit').checked=cfg.split;
+  $('#sSrv').value=cfg.srvUrl;$('#sTok').value=cfg.srvToken;
+  if(/^https?:/.test(location.protocol))$('#sSrv').placeholder=location.origin;
+  setSync(syncSt,syncMsg);
 }
+$('#sSrv').onchange=e=>{
+  let v=e.target.value.trim();
+  if(v&&!/^https?:\/\//i.test(v))v='https://'+v;
+  cfg.srvUrl=v.replace(/\/+$/,'');e.target.value=cfg.srvUrl;saveCfg();pull();
+};
+$('#sTok').onchange=e=>{cfg.srvToken=e.target.value.trim();saveCfg();if(srvOn())pull()};
+$('#sSrvTest').onclick=async()=>{
+  cfg.srvUrl=$('#sSrv').value.trim().replace(/\/+$/,'');cfg.srvToken=$('#sTok').value.trim();
+  if(cfg.srvUrl&&!/^https?:\/\//i.test(cfg.srvUrl))cfg.srvUrl='https://'+cfg.srvUrl;
+  $('#sSrv').value=cfg.srvUrl;saveCfg();
+  if(!srvOn())return toast('Вкажіть адресу сервера',true);
+  const b=$('#sSrvTest');b.disabled=true;
+  const ok=await pull();
+  b.disabled=false;toast(ok?'Сервер підключено':syncMsg||'Помилка підключення',!ok);
+};
 $('#sKey').onchange=e=>{cfg.key=e.target.value.trim();saveCfg();toast('Ключ збережено')};
-$('#sModel').onchange=e=>{cfg.model=e.target.value.trim()||'gemini-2.5-flash';e.target.value=cfg.model;saveCfg();toast('Модель збережено')};
-$('#sCur').onchange=e=>{cfg.cur=e.target.value;saveCfg();renderAll()};
+$('#sModel').onchange=e=>{cfg.model=e.target.value.trim()||DEF_MODEL;e.target.value=cfg.model;saveCfg();toast('Модель збережено')};
+$('#sCur').onchange=e=>{cfg.cur=e.target.value;saveCfg(true);renderAll()};
 $('#sSplit').onchange=e=>{cfg.split=e.target.checked;saveCfg()};
 $('#sTest').onclick=async()=>{
   cfg.key=$('#sKey').value.trim();cfg.model=$('#sModel').value.trim()||cfg.model;saveCfg();
@@ -421,7 +520,7 @@ $('#sCsvF').onclick=()=>{
 };
 $('#sClear').onclick=()=>{
   if(!tx.length&&!fuel.length)return;
-  if(confirm('Видалити всі операції та заправки? Це не можна скасувати.')){tx=[];fuel=[];saveTx();saveFuel();renderAll();toast('Усі дані видалено')}
+  if(confirm('Видалити всі операції та заправки (разом із сервером)? Це не можна скасувати.')){tx=[];fuel=[];saveTx();saveFuel();renderAll();toast('Усі дані видалено')}
 };
 
 /* ---------- Gemini ---------- */
@@ -441,13 +540,13 @@ async function gemini(parts,system){
       body:JSON.stringify({
         systemInstruction:{parts:[{text:system}]},
         contents:[{role:'user',parts}],
-        generationConfig:{responseMimeType:'application/json',temperature:0.1}
+        generationConfig:{responseMimeType:'application/json'}
       })
     });
   }catch(e){throw new Error('Немає зв’язку з Gemini. Перевірте інтернет.')}
   const data=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(data.error?.message?('Gemini: '+data.error.message):'Помилка Gemini '+r.status);
-  const text=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+  const text=(data.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('');
   if(!text)throw new Error('Gemini не повернув відповіді. Спробуйте ще раз.');
   return text;
 }
@@ -468,6 +567,7 @@ function parseItems(text){
 /* ---------- sheet ---------- */
 let sheet=null,rec=null,recStream=null,recChunks=[],recTimer=null,recT0=0;
 const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const backVoice=()=>openSheet({mode:'voice'});
 function openSheet(s){sheet=s;renderSheet();$('#ov').classList.add('open')}
 function closeSheet(){stopStream();$('#ov').classList.remove('open');sheet=null}
 $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&sheet?.mode!=='busy')closeSheet()});
@@ -487,11 +587,12 @@ function renderSheet(){
     $('#micBtn').onclick=toggleRec;
     $('#txtGo').onclick=()=>{
       const v=$('#txtIn').value.trim();if(!v)return toast('Введіть текст',true);
-      runAI([{text:v}],'текстового повідомлення користувача','voice');
+      runAI([{text:v}],'текстового повідомлення користувача',backVoice);
     };
   }else if(sheet.mode==='busy'){
     el.innerHTML=`<div class="center"><div class="spin"></div><p>${esc(sheet.msg)}</p></div>`;
     return;
+  }else if(sheet.mode==='photos'){drawPhotos();return;
   }else if(sheet.mode==='fuel'){drawFuel();return;
   }else if(sheet.mode==='fuelphoto'){drawFuelPhoto();return;
   }else{
@@ -560,11 +661,11 @@ async function runAI(parts,kind,back){
   try{
     const items=parseItems(await gemini(parts,sysPrompt(kind)));
     if(sheet!==mine)return;
-    if(!items.length){toast('Нічого не розпізнано. Спробуйте ще раз.',true);back==='voice'?openSheet({mode:'voice'}):closeSheet();return}
+    if(!items.length){toast('Нічого не розпізнано. Спробуйте ще раз.',true);back?back():closeSheet();return}
     openSheet({mode:'review',title:'Перевірте результат',sub:'Gemini розпізнав операції. Виправте, якщо потрібно, і збережіть.',drafts:items});
   }catch(e){
     if(sheet!==mine)return;
-    toast(e.message,true);back==='voice'?openSheet({mode:'voice'}):closeSheet();
+    toast(e.message,true);back?back():closeSheet();
   }
 }
 
@@ -590,7 +691,7 @@ async function toggleRec(){
     const mine={mode:'busy',msg:'Розпізнаю голос…'};openSheet(mine);
     try{
       const wav=await toWav(blob);
-      await runAI([{inline_data:{mime_type:'audio/wav',data:b64(wav)}},{text:'Розпізнай витрати та доходи з цього голосового повідомлення.'}],'голосового повідомлення користувача','voice');
+      await runAI([{inline_data:{mime_type:'audio/wav',data:b64(wav)}},{text:'Розпізнай витрати та доходи з цього голосового повідомлення.'}],'голосового повідомлення користувача',backVoice);
     }catch(e){toast('Не вдалося обробити запис',true);openSheet({mode:'voice'})}
   };
   rec.start();recT0=Date.now();
@@ -612,7 +713,8 @@ async function toWav(blob){
   return v.buffer;
 }
 
-/* photo */
+/* photo: спочатку додаємо фото, потім «Обробити AI», потім перевірка й «Зберегти» */
+const MAX_PHOTOS=10;
 function loadImage(file){
   return new Promise((res,rej)=>{
     const img=new Image(),url=URL.createObjectURL(file);
@@ -625,16 +727,42 @@ function loadImage(file){
     img.onerror=()=>rej(new Error('Не вдалося відкрити фото'));img.src=url;
   });
 }
+function drawPhotos(){
+  const s=sheet;
+  const tiles=s.imgs.map((d,i)=>`<div class="slot has"><img alt="" src="data:image/jpeg;base64,${d}"><button class="rm" type="button" data-rm="${i}" aria-label="Прибрати фото ${i+1}">✕</button><b>Фото ${i+1}</b></div>`).join('');
+  const add=s.imgs.length<MAX_PHOTOS?`<button class="slot" id="phAdd" type="button"><b>＋ Додати фото</b><span>Зробити або обрати</span></button>`:'';
+  $('#sheet').innerHTML=head('Фото')+`<p class="sub">Додайте одне чи кілька фото чеків або скриншотів. Коли все додано, натисніть «Обробити AI». Результат можна буде перевірити перед збереженням.</p>
+    <div class="slots">${tiles}${add}</div>
+    <div class="btns"><button class="btn main" id="phGo" type="button" ${s.imgs.length?'':'disabled'}>Обробити AI${s.imgs.length>1?` (${s.imgs.length})`:''}</button></div>`;
+  $('#shX').onclick=closeSheet;
+  if($('#phAdd'))$('#phAdd').onclick=()=>$('#file').click();
+  document.querySelectorAll('#sheet [data-rm]').forEach(b=>b.onclick=()=>{s.imgs.splice(+b.dataset.rm,1);drawPhotos()});
+  $('#phGo').onclick=runPhotoAI;
+}
 $('#file').onchange=async e=>{
-  const f=e.target.files[0];e.target.value='';if(!f)return;
-  if(!cfg.key)return toast('Спочатку додайте API ключ у налаштуваннях',true);
-  openSheet({mode:'busy',msg:'Читаю фото…'});
+  const files=[...e.target.files];e.target.value='';
+  if(!files.length||!sheet||sheet.mode!=='photos')return;
+  const s=sheet;
   try{
-    const data=await loadImage(f);
-    const hint=cfg.split?'Це фото чека. Додай окремий елемент для кожної товарної позиції з її ціною.':'Це фото чека. Додай один елемент із загальною сумою, а в note вкажи назву магазину.';
-    await runAI([{inline_data:{mime_type:'image/jpeg',data}},{text:hint+' Якщо це не чек, а фото інформації про покупку чи оплату (скриншот, замовлення, рахунок), витягни з нього суму та опис.'}],'фото чека або інформації про покупку');
-  }catch(err){toast(err.message,true);closeSheet()}
+    for(const f of files){
+      if(s.imgs.length>=MAX_PHOTOS){toast(`Максимум ${MAX_PHOTOS} фото`,true);break}
+      const d=await loadImage(f);if(sheet!==s)return;s.imgs.push(d);
+    }
+  }catch(err){toast(err.message,true)}
+  if(sheet===s)drawPhotos();
 };
+function runPhotoAI(){
+  const s=sheet;if(!s||!s.imgs.length)return;
+  if(!cfg.key)return toast('Спочатку додайте API ключ у налаштуваннях',true);
+  const many=s.imgs.length>1;
+  const hint=cfg.split
+    ?'Це фото чека'+(many?' (їх кілька, кожне може бути окремим чеком)':'')+'. Додай окремий елемент для кожної товарної позиції з її ціною.'
+    :many?'Це кілька фото, кожне може бути окремим чеком. Додай по одному елементу на кожен чек із загальною сумою, а в note вкажи назву магазину.'
+    :'Це фото чека. Додай один елемент із загальною сумою, а в note вкажи назву магазину.';
+  const parts=[...s.imgs.map(d=>({inline_data:{mime_type:'image/jpeg',data:d}})),
+    {text:hint+' Якщо це не чек, а фото інформації про покупку чи оплату (скриншот, замовлення, рахунок), витягни з нього суму та опис.'}];
+  runAI(parts,'фото чека або інформації про покупку',()=>openSheet({mode:'photos',imgs:s.imgs}));
+}
 
 /* ---------- fuel ---------- */
 const nf=(n,d=0)=>new Intl.NumberFormat('uk-UA',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
@@ -688,11 +816,11 @@ function renderOil(cur){
   $('#oilSave').onclick=()=>{
     const l=parseInt($('#oilLast').value),i=parseInt($('#oilInt').value);
     if(isNaN(l)||l<0)return toast('Вкажіть пробіг останньої заміни',true);
-    cfg.oilLast=l;cfg.oilInt=i>0?i:10000;saveCfg();renderFuel();toast('Збережено');
+    cfg.oilLast=l;cfg.oilInt=i>0?i:10000;saveCfg(true);renderFuel();toast('Збережено');
   };
   $('#oilNow').onclick=()=>{
     if(cur==null)return toast('Спочатку додайте заправку з пробігом',true);
-    if(confirm(`Записати заміну мастила на пробігу ${nf(cur)} км?`)){cfg.oilLast=cur;saveCfg();renderFuel();toast('Заміну записано')}
+    if(confirm(`Записати заміну мастила на пробігу ${nf(cur)} км?`)){cfg.oilLast=cur;saveCfg(true);renderFuel();toast('Заміну записано')}
   };
 }
 const blankFuel=()=>({id:uid(),date:today(),odo:'',liters:'',total:'',price:''});
@@ -824,10 +952,12 @@ $('#aVoice').onclick=()=>{
 };
 $('#aPhoto').onclick=()=>{
   if(!cfg.key)return toast('Додайте API ключ Gemini у налаштуваннях',true);
-  $('#file').click();
+  openSheet({mode:'photos',imgs:[]});
 };
 
 fillCur();loadSettings();renderAll();
+store.set('sp.cfg',JSON.stringify(cfg));
+pull();
 </script>
 </body>
 </html>
