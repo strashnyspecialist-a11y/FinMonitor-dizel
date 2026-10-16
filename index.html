@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#040806">
+<title>Витрати</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090c; --card:#141419; --card2:#1c1c23; --line:#2a2a33;
+  --tx:#f3f4f7; --mut:#9b9ca8; --faint:#6d6e7a;
+  --g:#34f08c; --r:#ff4d6d; --acc:#8c7dff;
+  --glow-g:0 0 14px rgba(52,240,140,.35); --glow-r:0 0 14px rgba(255,77,109,.4);
+  --ui:'Manrope',system-ui,sans-serif; --display:'Manrope',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{
+  font-family:var(--ui);color:var(--tx);line-height:1.4;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(520px 320px at 0% 0%,rgba(140,125,255,.16),transparent 70%),
+             radial-gradient(480px 320px at 100% 100%,rgba(52,240,140,.07),transparent 70%),var(--bg);
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+svg{display:block}
+
+/* home: fits one screen */
+.app{
+  height:100dvh;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px;overflow-y:auto;overflow-x:hidden;
+  padding:calc(env(safe-area-inset-top) + 16px) 18px calc(env(safe-area-inset-bottom) + 16px);
+}
+.top{display:flex;justify-content:space-between;align-items:baseline}
+.brand{font-weight:800;font-size:18px;letter-spacing:-.01em}
+.date{font-size:13px;color:var(--mut);text-transform:capitalize}
+.hero{flex:1;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.hero small{font-size:13px;color:var(--mut);font-weight:600}
+.balance{
+  font-weight:800;font-size:clamp(36px,12.5vw,60px);line-height:1.05;letter-spacing:-.035em;white-space:nowrap;
+  font-variant-numeric:tabular-nums;color:var(--tx);
+}
+.balance.pos{color:var(--g);text-shadow:var(--glow-g)}
+.balance.neg{color:var(--r);text-shadow:var(--glow-r)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pair div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 14px;min-width:0}
+.pair span{display:block;font-size:12px;color:var(--mut);font-weight:600}
+.pair b{display:block;font-size:17px;font-weight:800;color:var(--g);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.pair .out b{color:var(--r)}
+
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.act{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 6px;min-height:92px;border-radius:18px;
+  background:var(--card);border:1px solid var(--line);font-weight:700;font-size:14px;transition:background .15s,border-color .15s,transform .1s;
+}
+.act:hover{background:var(--card2);border-color:#3a3a46}
+.act:active{transform:scale(.97)}
+.ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(140,125,255,.15);color:var(--acc)}
+.ico svg{width:20px;height:20px}
+.act small{font-size:11px;font-weight:600;color:var(--faint);margin-top:-3px}
+
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.navb{
+  display:flex;align-items:center;gap:10px;padding:14px;border-radius:16px;background:var(--card);border:1px solid var(--line);
+  font-weight:700;font-size:14px;text-align:left;transition:background .15s,border-color .15s;
+}
+.navb:hover{background:var(--card2);border-color:#3a3a46}
+.navb svg{width:20px;height:20px;color:var(--mut);flex:none}
+.navb.wide{grid-column:1/-1;background:var(--card2);padding:16px 14px}
+.navb.wide svg:last-child{margin-left:auto}
+@media(max-height:700px){
+  .app{gap:10px}.hero{min-height:110px}.act{min-height:76px;padding:10px 4px}.ico{width:32px;height:32px}.navb{padding:11px 12px}.navb.wide{padding:13px 12px}.pair{margin-top:6px}
+}
+
+/* pages */
+.page{position:fixed;inset:0;z-index:10;background:var(--bg);overflow-y:auto;overflow-x:hidden;display:none;overscroll-behavior:contain}
+.page.open{display:block}
+.pg-h{
+  position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top) + 12px) 18px 12px;
+  background:rgba(9,9,12,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+}
+.pg-h h1{font-size:18px;font-weight:800}
+.back{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);display:grid;place-items:center;background:var(--card)}
+.back svg{width:20px;height:20px}
+.pg{max-width:560px;margin:0 auto;padding:18px 18px calc(40px + env(safe-area-inset-bottom))}
+
+/* lists */
+.search{width:100%;margin-bottom:10px}
+.day{margin-top:18px;font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.row{display:flex;justify-content:space-between;gap:14px;align-items:center;width:100%;text-align:left;padding:14px 0;border-bottom:1px solid var(--line)}
+.what{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.cat{font-size:13px;color:var(--mut)}
+.sum{font-size:15px;font-weight:800;white-space:nowrap;color:var(--g);font-variant-numeric:tabular-nums}
+.sum.out{color:var(--r)}
+.empty{padding:40px 0;text-align:center;color:var(--mut)}
+.bar{margin:16px 0}
+.bar-h{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.bar-h b{color:var(--r);font-weight:800}
+.track{height:8px;border-radius:8px;background:var(--card2)}
+.fill{height:100%;border-radius:8px;background:var(--r)}
+.fill.ok{background:var(--g)}
+
+/* forms */
+label.f{display:block;margin:0 0 16px;font-size:13px;color:var(--mut);font-weight:700}
+label.f>span{display:block;margin-bottom:6px}
+input,select,textarea{width:100%;background:#0f0f14;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--tx)}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(140,125,255,.18)}
+option{background:#14141a;color:var(--tx)}
+input[type=date]{color-scheme:dark}
+.hint{font-size:12px;color:var(--faint);margin-top:6px;font-weight:500}
+.check{display:flex;gap:10px;align-items:center;margin:0 0 16px;font-weight:600;color:var(--tx)}
+.check input{width:20px;height:20px;accent-color:var(--acc)}
+.btn{padding:12px 18px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-weight:700;transition:background .15s,border-color .15s}
+.btn:hover{border-color:#42424f;background:#23232b}
+.btn.main{background:var(--tx);color:#0b0b0e;border-color:var(--tx)}
+.btn.main:hover{background:#fff}
+.btn.ghost{background:transparent;color:var(--mut)}
+.btn.danger{background:transparent;border-color:rgba(255,77,109,.5);color:var(--r)}
+.btn.danger:hover{background:rgba(255,77,109,.1)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+h2{font-size:15px;font-weight:800;margin:26px 0 14px}
+h2:first-child{margin-top:0}
+.sub{color:var(--mut);font-size:14px;margin-bottom:16px}
+.center{text-align:center}
+.card{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:18px;margin:0 0 22px}
+.card h2{margin:0 0 12px}
+.oil-big{font-size:clamp(20px,5.6vw,26px);font-weight:800;line-height:1.2;color:var(--g);text-shadow:var(--glow-g)}
+.oil-big.bad{color:var(--r);text-shadow:var(--glow-r)}
+.oil-sub{font-size:14px;color:var(--mut);margin:10px 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.oil-form{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.st4{display:grid;grid-template-columns:1fr 1fr;gap:18px 14px;margin:0 0 22px}
+.st4 span{display:block;font-size:12px;color:var(--mut);font-weight:600}
+.st4 b{font-size:17px;font-weight:800;color:var(--g)}
+.st4 b.r{color:var(--r)}
+.rt{text-align:right}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.slot{display:flex;flex-direction:column;justify-content:flex-end;gap:4px;min-height:130px;padding:12px;border:1px dashed #44444f;border-radius:16px;text-align:left;background:var(--card2);overflow:hidden;position:relative}
+.slot.has{border:1px solid var(--acc)}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35}
+.slot b,.slot span{position:relative}
+.slot span{font-size:12px;color:var(--mut)}
+
+/* sheet */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.ov.open{display:flex}
+.sheet{
+  width:100%;max-width:600px;max-height:92dvh;overflow:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;
+  padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .22s ease-out;
+}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:24px;border-bottom:1px solid var(--line)}}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.sh-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sh-h h3{font-size:18px;font-weight:800}
+.x{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);font-size:16px;line-height:1;color:var(--mut)}
+.draft{border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px;background:var(--card2)}
+.draft .l1{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-bottom:10px}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{padding:9px 12px;font-size:13px;font-weight:700;color:var(--faint)}
+.seg button.on.e{background:rgba(255,77,109,.16);color:var(--r)}
+.seg button.on.i{background:rgba(52,240,140,.14);color:var(--g)}
+.amt{font-size:16px;font-weight:800}
+.draft.e .amt{color:var(--r)}
+.draft.i .amt{color:var(--g)}
+.draft .l2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.rm{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);color:var(--mut)}
+.tot{display:flex;justify-content:space-between;margin:14px 0;font-weight:700}
+.mic{display:grid;place-items:center;width:104px;height:104px;margin:10px auto 14px;border-radius:50%;border:2px solid var(--acc);color:var(--acc);background:rgba(140,125,255,.1);box-shadow:0 0 30px rgba(140,125,255,.25)}
+.mic svg{width:40px;height:40px}
+.mic.on{border-color:var(--r);color:var(--r);background:rgba(255,77,109,.1);box-shadow:0 0 34px rgba(255,77,109,.4);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.07)}}
+.spin{width:44px;height:44px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--acc);margin:30px auto 16px;animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.or{display:flex;align-items:center;gap:12px;margin:22px 0 14px;color:var(--faint);font-size:13px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.toast{
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  background:var(--card2);border:1px solid var(--line);padding:12px 18px;border-radius:14px;z-index:40;max-width:90vw;
+  box-shadow:0 10px 40px rgba(0,0,0,.5);transition:.2s;font-weight:600;text-align:center;font-size:14px
+}
+.toast.err{border-color:rgba(255,77,109,.6);color:var(--r)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="app" id="home">
+  <header class="top"><div class="brand">Мої витрати</div><div class="date" id="dateNow"></div></header>
+
+  <section class="hero">
+    <small>Баланс</small>
+    <div class="balance" id="bal">0,00</div>
+    <div class="pair">
+      <div><span>Доходи за місяць</span><b id="mIn">0</b></div>
+      <div class="out"><span>Витрати за місяць</span><b id="mOut">0</b></div>
+    </div>
+  </section>
+
+  <section class="actions">
+    <button class="act" id="aManual"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Вручну</button>
+    <button class="act" id="aVoice"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>Голос<small>Gemini</small></button>
+    <button class="act" id="aPhoto"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>Фото<small>Gemini</small></button>
+  </section>
+  <input type="file" id="file" accept="image/*" hidden>
+  <input type="file" id="fileR" accept="image/*" hidden>
+  <input type="file" id="fileO" accept="image/*" hidden>
+
+  <nav class="nav">
+    <button class="navb wide" data-page="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Список витрат<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="navb" data-page="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Статистика</button>
+    <button class="navb" data-page="fuel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M14 9h2.5a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h4"/></svg>Пальне</button>
+    <button class="navb wide" data-page="set" style="background:var(--card)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Налаштування<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+  </nav>
+</main>
+
+<section class="page" id="p-list">
+  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Список витрат</h1></div>
+  <div class="pg">
+    <input class="search" id="q" type="search" placeholder="Пошук за описом або категорією">
+    <div id="list"></div>
+  </div>
+</section>
+<section class="page" id="p-stats">
+  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Статистика</h1></div>
+  <div class="pg">
+    <label class="f"><span>Період</span>
+      <select id="period">
+        <option value="m0">Цей місяць</option>
+        <option value="m1">Минулий місяць</option>
+        <option value="all">Весь час</option>
+      </select>
+    </label>
+    <div class="pair" id="stSum"></div>
+    <h2>Витрати за категоріями</h2>
+    <div id="bars"></div>
+  </div>
+</section>
+<section class="page" id="p-fuel">
+  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Пальне</h1></div>
+  <div class="pg">
+    <div class="actions" style="grid-template-columns:1fr 1fr">
+      <button class="act" id="aFuelManual"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Вручну</button>
+      <button class="act" id="aFuelPhoto"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>Чек і одометр<small>Gemini</small></button>
+    </div>
+    <div style="height:20px"></div>
+    <div class="card" id="oil"></div>
+    <div id="fuelSum"></div>
+    <h2>Заправки</h2>
+    <div id="fuelList"></div>
+  </div>
+</section>
+<section class="page" id="p-set">
+  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Налаштування</h1></div>
+  <div class="pg">
+    <h2>Gemini AI</h2>
+    <label class="f"><span>API ключ</span>
+      <input type="password" id="sKey" autocomplete="off" placeholder="AIza...">
+      <div class="hint">Ключ зберігається лише в цьому браузері. Отримати його можна в Google AI Studio.</div>
+    </label>
+    <label class="f"><span>Модель</span>
+      <input id="sModel" list="models" placeholder="gemini-2.5-flash">
+      <datalist id="models">
+        <option value="gemini-2.5-flash"><option value="gemini-2.5-flash-lite"><option value="gemini-2.5-pro"><option value="gemini-2.0-flash">
+      </datalist>
+      <div class="hint">Оберіть зі списку або впишіть будь-яку назву моделі Gemini.</div>
+    </label>
+    <label class="check"><input type="checkbox" id="sSplit"> Розбивати чек на окремі позиції</label>
+    <div class="btns"><button class="btn" id="sTest">Перевірити підключення</button></div>
+
+    <h2>Загальні</h2>
+    <label class="f"><span>Валюта</span>
+      <select id="sCur"></select>
+      <div class="hint">Усі суми в додатку відображатимуться в обраній валюті.</div>
+    </label>
+
+    <h2>Дані</h2>
+    <div class="btns">
+      <button class="btn" id="sCsv">Експорт витрат у CSV</button>
+      <button class="btn" id="sCsvF">Експорт пального у CSV</button>
+      <button class="btn danger" id="sClear">Видалити всі дані</button>
+    </div>
+  </div>
+</section>
+<div class="ov" id="ov" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const CATS=['Продукти','Кафе і ресторани','Транспорт','Житло','Здоров’я','Розваги','Одяг','Зв’язок','Подарунки','Освіта','Інше','Зарплата','Інший дохід'];
+
+/* storage: localStorage, falls back to memory if blocked */
+const mem={};
+const store={
+  get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}
+};
+let tx=JSON.parse(store.get('sp.tx')||'[]');
+let fuel=JSON.parse(store.get('sp.fuel')||'[]');
+const saveFuel=()=>store.set('sp.fuel',JSON.stringify(fuel));
+let cfg=Object.assign({key:'',model:'gemini-2.5-flash',cur:'UAH',split:true,oilLast:null,oilInt:10000},JSON.parse(store.get('sp.cfg')||'{}'));
+const saveTx=()=>store.set('sp.tx',JSON.stringify(tx));
+const saveCfg=()=>store.set('sp.cfg',JSON.stringify(cfg));
+
+/* helpers */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dstr=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>dstr(new Date());
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const money=(n,sign)=>{
+  let s;
+  try{s=new Intl.NumberFormat('uk-UA',{style:'currency',currency:cfg.cur,maximumFractionDigits:2}).format(Math.abs(n))}
+  catch(e){s=Math.abs(n).toFixed(2)}
+  return (n<0?'−':sign?'+':'')+s;
+};
+function toast(msg,err){
+  const t=$('#toast');t.textContent=msg;t.className='toast show'+(err?' err':'');
+  clearTimeout(toast.id);toast.id=setTimeout(()=>t.className='toast'+(err?' err':''),3200);
+}
+const b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+
+/* ---------- rendering ---------- */
+function fitBal(){
+  const el=$('#bal');if(!el)return;el.style.fontSize='';
+  let fs=parseFloat(getComputedStyle(el).fontSize);
+  while(el.scrollWidth>el.clientWidth&&fs>20){fs-=2;el.style.fontSize=fs+'px'}
+}
+function renderHero(){
+  let inc=0,out=0,mi=0,mo=0;const m=today().slice(0,7);
+  tx.forEach(t=>{
+    if(t.type==='income'){inc+=t.amount;if(t.date.startsWith(m))mi+=t.amount}
+    else{out+=t.amount;if(t.date.startsWith(m))mo+=t.amount}
+  });
+  const bal=inc-out;
+  const el=$('#bal');el.textContent=money(bal);el.classList.toggle('neg',bal<0);el.classList.toggle('pos',bal>0);fitBal();
+  $('#dateNow').textContent=new Date().toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
+  $('#mIn').textContent=money(mi);$('#mOut').textContent=money(-mo).replace('−','');
+}
+function renderList(){
+  const q=$('#q').value.trim().toLowerCase();
+  const items=tx.filter(t=>!q||(t.note+' '+t.category).toLowerCase().includes(q))
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  if(!items.length){
+    $('#list').innerHTML=`<div class="empty">${tx.length?'Нічого не знайдено.':'Операцій ще немає. Додайте першу вручну, голосом або фото чека.'}</div>`;return;
+  }
+  let html='',last='';
+  items.forEach(t=>{
+    if(t.date!==last){
+      last=t.date;
+      const d=new Date(t.date+'T12:00:00');
+      html+=`<div class="day">${esc(d.toLocaleDateString('uk-UA',{weekday:'short',day:'numeric',month:'long'}))}</div>`;
+    }
+    const out=t.type==='expense';
+    html+=`<button class="row" data-id="${t.id}">
+      <div style="min-width:0"><div class="what">${esc(t.note||t.category)}</div><div class="cat">${esc(t.category)}</div></div>
+      <div class="sum ${out?'out':''}">${money(out?-t.amount:t.amount,true)}</div></button>`;
+  });
+  $('#list').innerHTML=html;
+}
+function renderStats(){
+  const p=$('#period').value;const now=new Date();
+  const key=p==='m0'?today().slice(0,7):p==='m1'?dstr(new Date(now.getFullYear(),now.getMonth()-1,1)).slice(0,7):'';
+  const set=tx.filter(t=>!key||t.date.startsWith(key));
+  const inc=set.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp=set.filter(t=>t.type==='expense');
+  const out=exp.reduce((a,t)=>a+t.amount,0);
+  $('#stSum').innerHTML=`<div><span>Доходи</span><b>${money(inc)}</b></div><div class="out"><span>Витрати</span><b>${money(out)}</b></div>`;
+  const by={};exp.forEach(t=>by[t.category]=(by[t.category]||0)+t.amount);
+  const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
+  $('#bars').innerHTML=rows.length?rows.map(([c,v])=>`
+    <div class="bar"><div class="bar-h"><span>${esc(c)}</span><b>${money(v)}</b></div>
+    <div class="track"><div class="fill" style="width:${Math.max(3,v/rows[0][1]*100)}%"></div></div></div>`).join('')
+    :'<div class="empty">За цей період витрат немає.</div>';
+}
+function renderAll(){renderHero();renderList();renderStats();renderFuel()}
+
+/* ---------- tabs ---------- */
+function openPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('open',p.id==='p-'+n));
+  $('#p-'+n).scrollTop=0;renderAll();
+}
+function closePage(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('open'));renderHero()}
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPage(b.dataset.page));
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=closePage);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheet)closePage()});
+window.addEventListener('resize',()=>fitBal());
+$('#q').oninput=renderList;
+$('#period').onchange=renderStats;
+
+/* ---------- settings ---------- */
+function loadSettings(){
+  $('#sKey').value=cfg.key;$('#sModel').value=cfg.model;$('#sCur').value=cfg.cur;$('#sSplit').checked=cfg.split;
+}
+$('#sKey').onchange=e=>{cfg.key=e.target.value.trim();saveCfg();toast('Ключ збережено')};
+$('#sModel').onchange=e=>{cfg.model=e.target.value.trim()||'gemini-2.5-flash';e.target.value=cfg.model;saveCfg();toast('Модель збережено')};
+$('#sCur').onchange=e=>{cfg.cur=e.target.value;saveCfg();renderAll()};
+$('#sSplit').onchange=e=>{cfg.split=e.target.checked;saveCfg()};
+$('#sTest').onclick=async()=>{
+  cfg.key=$('#sKey').value.trim();cfg.model=$('#sModel').value.trim()||cfg.model;saveCfg();
+  const b=$('#sTest');b.disabled=true;
+  try{await gemini([{text:'Відповідай лише JSON: {"ok":true}'}],'Ти тестовий сервіс.');toast('Підключення працює')}
+  catch(e){toast(e.message,true)}
+  b.disabled=false;
+};
+$('#sCsv').onclick=()=>{
+  if(!tx.length)return toast('Немає даних для експорту',true);
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const csv='\ufeffДата,Тип,Сума,Категорія,Опис\n'+tx.slice().sort((a,b)=>a.date.localeCompare(b.date))
+    .map(t=>[t.date,t.type==='income'?'Дохід':'Витрата',t.amount,q(t.category),q(t.note)].join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='vytraty.csv';a.click();
+};
+$('#sCsvF').onclick=()=>{
+  if(!fuel.length)return toast('Немає заправок для експорту',true);
+  const csv='\ufeffДата,Пробіг (км),Літри,Сума,Ціна за літр,Витрата (л/100 км)\n'+
+    fuelCalc().map(f=>[f.date,f.odo,f.liters,f.total,f.price,f.cons?f.cons.toFixed(2):''].join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='palyvo.csv';a.click();
+};
+$('#sClear').onclick=()=>{
+  if(!tx.length&&!fuel.length)return;
+  if(confirm('Видалити всі операції та заправки? Це не можна скасувати.')){tx=[];fuel=[];saveTx();saveFuel();renderAll();toast('Усі дані видалено')}
+};
+
+/* ---------- Gemini ---------- */
+function sysPrompt(kind){
+  return `Ти помічник для обліку особистих фінансів. Сьогодні ${today()}. Основна валюта користувача: ${cfg.cur}.
+Із ${kind} витягни всі витрати та доходи. Відповідай ЛИШЕ валідним JSON-масивом без пояснень, формат елемента:
+{"type":"expense" або "income","amount":число більше нуля,"category":одна з [${CATS.join(', ')}],"note":короткий опис мовою користувача,"date":"YYYY-MM-DD"}
+Правила: якщо дата не вказана — використай сьогоднішню; "вчора", "позавчора" та подібне переводь у конкретну дату; сума — лише число без валюти; якщо нічого не знайдено — поверни [].`;
+}
+async function gemini(parts,system){
+  if(!cfg.key)throw new Error('Спочатку додайте API ключ у налаштуваннях');
+  let r;
+  try{
+    r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-goog-api-key':cfg.key},
+      body:JSON.stringify({
+        systemInstruction:{parts:[{text:system}]},
+        contents:[{role:'user',parts}],
+        generationConfig:{responseMimeType:'application/json',temperature:0.1}
+      })
+    });
+  }catch(e){throw new Error('Немає зв’язку з Gemini. Перевірте інтернет.')}
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.error?.message?('Gemini: '+data.error.message):'Помилка Gemini '+r.status);
+  const text=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+  if(!text)throw new Error('Gemini не повернув відповіді. Спробуйте ще раз.');
+  return text;
+}
+function parseItems(text){
+  let j;
+  try{j=JSON.parse(text.replace(/^```(?:json)?|```$/g,'').trim())}catch(e){throw new Error('Не вдалося розібрати відповідь Gemini')}
+  if(!Array.isArray(j))j=j.items||j.transactions||[];
+  return j.map(it=>({
+    id:uid(),
+    type:it.type==='income'?'income':'expense',
+    amount:Math.abs(parseFloat(String(it.amount).replace(',','.')))||0,
+    category:CATS.includes(it.category)?it.category:'Інше',
+    note:String(it.note||'').slice(0,120),
+    date:/^\d{4}-\d{2}-\d{2}$/.test(it.date)?it.date:today()
+  })).filter(it=>it.amount>0);
+}
+
+/* ---------- sheet ---------- */
+let sheet=null,rec=null,recStream=null,recChunks=[],recTimer=null,recT0=0;
+const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+function openSheet(s){sheet=s;renderSheet();$('#ov').classList.add('open')}
+function closeSheet(){stopStream();$('#ov').classList.remove('open');sheet=null}
+$('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&sheet?.mode!=='busy')closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheet&&sheet.mode!=='busy')closeSheet()});
+
+function head(title){return `<div class="sh-h"><h3>${title}</h3><button class="x" id="shX" aria-label="Закрити">✕</button></div>`}
+function renderSheet(){
+  const el=$('#sheet');
+  if(sheet.mode==='voice'){
+    el.innerHTML=head('Голосовий ввід')+`
+      <p class="sub">Натисніть і розкажіть про витрати, наприклад: «вчора купив продукти на 540 гривень і заплатив 120 за таксі».</p>
+      <button class="mic" id="micBtn" aria-label="Почати запис">${MIC}</button>
+      <p class="center sub" id="micSt">Готово до запису</p>
+      <div class="or">або напишіть текстом</div>
+      <textarea id="txtIn" rows="3" placeholder="Кава 85, обід 240, зарплата 30000"></textarea>
+      <div class="btns" style="margin-top:12px"><button class="btn" id="txtGo">Розпізнати текст</button></div>`;
+    $('#micBtn').onclick=toggleRec;
+    $('#txtGo').onclick=()=>{
+      const v=$('#txtIn').value.trim();if(!v)return toast('Введіть текст',true);
+      runAI([{text:v}],'текстового повідомлення користувача','voice');
+    };
+  }else if(sheet.mode==='busy'){
+    el.innerHTML=`<div class="center"><div class="spin"></div><p>${esc(sheet.msg)}</p></div>`;
+    return;
+  }else if(sheet.mode==='fuel'){drawFuel();return;
+  }else if(sheet.mode==='fuelphoto'){drawFuelPhoto();return;
+  }else{
+    drawReview();return;
+  }
+  $('#shX').onclick=closeSheet;
+}
+function drawReview(){
+  const el=$('#sheet');const d=sheet.drafts;
+  el.innerHTML=head(sheet.title)+(sheet.sub?`<p class="sub">${esc(sheet.sub)}</p>`:'')+
+  d.map((t,i)=>`
+    <div class="draft ${t.type==='expense'?'e':'i'}" data-i="${i}">
+      <div class="l1">
+        <div class="seg"><button type="button" data-t="expense" class="e ${t.type==='expense'?'on':''}">Витрата</button><button type="button" data-t="income" class="i ${t.type==='income'?'on':''}">Дохід</button></div>
+        <input class="amt" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" value="${t.amount||''}" aria-label="Сума">
+        <button class="rm" type="button" aria-label="Видалити рядок">✕</button>
+      </div>
+      <div class="l2">
+        <select class="cat-s" aria-label="Категорія">${CATS.map(c=>`<option ${c===t.category?'selected':''}>${esc(c)}</option>`).join('')}</select>
+        <input class="date-i" type="date" value="${t.date}" aria-label="Дата">
+      </div>
+      <input class="note-i" placeholder="Опис" value="${esc(t.note)}" aria-label="Опис">
+    </div>`).join('')+
+  `<div class="btns"><button class="btn ghost" id="addRow" type="button">Додати рядок</button></div>
+   <div class="tot"><span>Разом</span><span id="shTot"></span></div>
+   <div class="btns"><button class="btn main" id="shSave" type="button">Зберегти</button>
+   ${sheet.editId?'<button class="btn danger" id="shDel" type="button">Видалити</button>':''}</div>`;
+  updTot();
+  $('#shX').onclick=closeSheet;
+  $('#addRow').onclick=()=>{d.push(blank());drawReview()};
+  $('#shSave').onclick=saveDrafts;
+  if(sheet.editId)$('#shDel').onclick=()=>{tx=tx.filter(t=>t.id!==sheet.editId);saveTx();renderAll();closeSheet();toast('Операцію видалено')};
+}
+const blank=()=>({id:uid(),type:'expense',amount:'',category:'Продукти',note:'',date:today()});
+function updTot(){
+  const s=sheet.drafts.reduce((a,t)=>a+(t.type==='income'?1:-1)*(+t.amount||0),0);
+  const el=$('#shTot');if(!el)return;el.textContent=money(s,true);
+  el.style.color=s<0?'var(--r)':'var(--g)';el.style.textShadow=s<0?'var(--glow-r)':'var(--glow-g)';
+}
+$('#sheet').addEventListener('input',e=>{
+  if(!sheet||sheet.mode!=='review')return;
+  const row=e.target.closest('.draft');if(!row)return;const t=sheet.drafts[+row.dataset.i];
+  if(e.target.classList.contains('amt')){t.amount=e.target.value;updTot()}
+  else if(e.target.classList.contains('cat-s'))t.category=e.target.value;
+  else if(e.target.classList.contains('date-i'))t.date=e.target.value;
+  else if(e.target.classList.contains('note-i'))t.note=e.target.value;
+});
+$('#sheet').addEventListener('click',e=>{
+  if(!sheet||sheet.mode!=='review')return;
+  const row=e.target.closest('.draft');if(!row)return;const i=+row.dataset.i;
+  if(e.target.dataset.t){sheet.drafts[i].type=e.target.dataset.t;drawReview()}
+  else if(e.target.closest('.rm')){sheet.drafts.splice(i,1);if(!sheet.drafts.length)sheet.drafts.push(blank());drawReview()}
+});
+function saveDrafts(){
+  const ok=sheet.drafts.filter(t=>+t.amount>0);
+  if(!ok.length)return toast('Вкажіть суму більше нуля',true);
+  const clean=ok.map(t=>({id:t.id,type:t.type,amount:Math.round(+t.amount*100)/100,category:t.category,note:t.note.trim(),date:t.date||today()}));
+  if(sheet.editId)tx=tx.map(t=>t.id===sheet.editId?clean[0]:t);else tx.push(...clean);
+  saveTx();renderAll();closeSheet();toast(clean.length>1?`Додано операцій: ${clean.length}`:'Збережено');
+}
+
+/* ---------- AI flows ---------- */
+async function runAI(parts,kind,back){
+  const mine={mode:'busy',msg:'Gemini опрацьовує дані…'};
+  stopStream();openSheet(mine);
+  try{
+    const items=parseItems(await gemini(parts,sysPrompt(kind)));
+    if(sheet!==mine)return;
+    if(!items.length){toast('Нічого не розпізнано. Спробуйте ще раз.',true);back==='voice'?openSheet({mode:'voice'}):closeSheet();return}
+    openSheet({mode:'review',title:'Перевірте результат',sub:'Gemini розпізнав операції. Виправте, якщо потрібно, і збережіть.',drafts:items});
+  }catch(e){
+    if(sheet!==mine)return;
+    toast(e.message,true);back==='voice'?openSheet({mode:'voice'}):closeSheet();
+  }
+}
+
+/* voice */
+function stopStream(){
+  clearInterval(recTimer);
+  if(rec&&rec.state!=='inactive'){rec.onstop=null;try{rec.stop()}catch(e){}}
+  if(recStream)recStream.getTracks().forEach(t=>t.stop());
+  rec=null;recStream=null;
+}
+async function toggleRec(){
+  if(rec&&rec.state==='recording'){rec.stop();return}
+  if(!navigator.mediaDevices||!window.MediaRecorder)return toast('Браузер не підтримує запис голосу',true);
+  try{recStream=await navigator.mediaDevices.getUserMedia({audio:true})}
+  catch(e){return toast('Немає доступу до мікрофона. Дозвольте його в налаштуваннях браузера.',true)}
+  recChunks=[];rec=new MediaRecorder(recStream);
+  rec.ondataavailable=e=>e.data.size&&recChunks.push(e.data);
+  rec.onstop=async()=>{
+    const type=rec.mimeType;clearInterval(recTimer);
+    recStream.getTracks().forEach(t=>t.stop());
+    const blob=new Blob(recChunks,{type});
+    if(blob.size<1500){toast('Запис занадто короткий',true);return renderSheet()}
+    const mine={mode:'busy',msg:'Розпізнаю голос…'};openSheet(mine);
+    try{
+      const wav=await toWav(blob);
+      await runAI([{inline_data:{mime_type:'audio/wav',data:b64(wav)}},{text:'Розпізнай витрати та доходи з цього голосового повідомлення.'}],'голосового повідомлення користувача','voice');
+    }catch(e){toast('Не вдалося обробити запис',true);openSheet({mode:'voice'})}
+  };
+  rec.start();recT0=Date.now();
+  $('#micBtn').classList.add('on');$('#micBtn').setAttribute('aria-label','Зупинити запис');
+  recTimer=setInterval(()=>{const s=Math.floor((Date.now()-recT0)/1000);$('#micSt').textContent=`Запис ${Math.floor(s/60)}:${pad(s%60)}. Натисніть, щоб зупинити`},250);
+  $('#micSt').textContent='Запис 0:00. Натисніть, щоб зупинити';
+}
+async function toWav(blob){
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const dec=await ctx.decodeAudioData(await blob.arrayBuffer());ctx.close();
+  const sr=16000,off=new OfflineAudioContext(1,Math.max(1,Math.ceil(dec.duration*sr)),sr);
+  const src=off.createBufferSource();src.buffer=dec;src.connect(off.destination);src.start();
+  const d=(await off.startRendering()).getChannelData(0);
+  const v=new DataView(new ArrayBuffer(44+d.length*2));
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+d.length*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,d.length*2,true);
+  for(let i=0;i<d.length;i++){const s=Math.max(-1,Math.min(1,d[i]));v.setInt16(44+i*2,s<0?s*0x8000:s*0x7fff,true)}
+  return v.buffer;
+}
+
+/* photo */
+function loadImage(file){
+  return new Promise((res,rej)=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const m=1600,k=Math.min(1,m/Math.max(img.width,img.height));
+      const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg',.85).split(',')[1]);
+    };
+    img.onerror=()=>rej(new Error('Не вдалося відкрити фото'));img.src=url;
+  });
+}
+$('#file').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(!cfg.key)return toast('Спочатку додайте API ключ у налаштуваннях',true);
+  openSheet({mode:'busy',msg:'Читаю фото…'});
+  try{
+    const data=await loadImage(f);
+    const hint=cfg.split?'Це фото чека. Додай окремий елемент для кожної товарної позиції з її ціною.':'Це фото чека. Додай один елемент із загальною сумою, а в note вкажи назву магазину.';
+    await runAI([{inline_data:{mime_type:'image/jpeg',data}},{text:hint+' Якщо це не чек, а фото інформації про покупку чи оплату (скриншот, замовлення, рахунок), витягни з нього суму та опис.'}],'фото чека або інформації про покупку');
+  }catch(err){toast(err.message,true);closeSheet()}
+};
+
+/* ---------- fuel ---------- */
+const nf=(n,d=0)=>new Intl.NumberFormat('uk-UA',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+const fnum=v=>{const n=parseFloat(String(v??'').replace(/\s/g,'').replace(',','.'));return isFinite(n)&&n>0?n:0};
+const rnd=(n,d)=>Math.round(n*10**d)/10**d;
+function fuelCalc(){
+  const asc=fuel.map(f=>({...f,cons:null})).sort((a,b)=>a.odo-b.odo||a.date.localeCompare(b.date));
+  asc.forEach((f,i)=>{if(i>0){const d=f.odo-asc[i-1].odo;if(d>0)f.cons=f.liters/d*100}});
+  return asc;
+}
+function renderFuel(){
+  const asc=fuelCalc(),cur=asc.length?asc[asc.length-1].odo:null;
+  let avg=null;
+  if(asc.length>1){const d=cur-asc[0].odo;if(d>0)avg=asc.slice(1).reduce((a,f)=>a+f.liters,0)/d*100}
+  const lastC=asc.length?asc[asc.length-1].cons:null;
+  const spent=asc.reduce((a,f)=>a+f.total,0),lit=asc.reduce((a,f)=>a+f.liters,0);
+  renderOil(cur);
+  $('#fuelSum').innerHTML=`<div class="st4">
+    <div><span>Середня витрата</span><b>${avg?nf(avg,1)+' л/100 км':'—'}</b></div>
+    <div><span>Остання заправка</span><b>${lastC?nf(lastC,1)+' л/100 км':'—'}</b></div>
+    <div><span>Витрачено на пальне</span><b class="r">${money(spent)}</b></div>
+    <div><span>Середня ціна за літр</span><b>${lit?money(spent/lit):'—'}</b></div></div>`;
+  if(!asc.length){$('#fuelList').innerHTML='<div class="empty">Заправок ще немає. Додайте першу вручну або за фото чека й одометра.</div>';return}
+  $('#fuelList').innerHTML=asc.slice().reverse().map(f=>`
+    <button class="row" data-id="${f.id}">
+      <div style="min-width:0"><div class="what">${nf(f.odo)} км</div>
+        <div class="cat">${esc(new Date(f.date+'T12:00:00').toLocaleDateString('uk-UA',{day:'numeric',month:'short',year:'numeric'}))}</div>
+        <div class="cat">${nf(f.liters,2)} л по ${money(f.price||f.total/f.liters)}</div></div>
+      <div class="rt"><div class="sum out">${money(f.total)}</div>
+        <div class="cat" style="color:var(--g);text-shadow:var(--glow-g)">${f.cons?nf(f.cons,1)+' л/100 км':'перша заправка'}</div></div>
+    </button>`).join('');
+}
+function renderOil(cur){
+  const last=cfg.oilLast,int=cfg.oilInt||10000;
+  let top='';
+  if(last==null){
+    top='<p class="oil-sub">Вкажіть пробіг, на якому востаннє міняли мастило. Далі додаток сам рахуватиме залишок за пробігом із заправок.</p>';
+  }else if(cur==null){
+    top='<p class="oil-sub">Додайте заправку з пробігом, і тут з’явиться залишок до заміни.</p>';
+  }else{
+    const rem=last+int-cur,used=Math.min(1,Math.max(0,(cur-last)/int)),bad=rem<=1000;
+    top=`<div class="oil-big ${bad?'bad':''}">${rem>=0?`До заміни залишилось ${nf(rem)} км`:`Прострочено на ${nf(-rem)} км`}</div>
+      <div class="track" style="margin:14px 0 0"><div class="fill ${bad?'':'ok'}" style="width:${Math.max(2,used*100)}%"></div></div>
+      <p class="oil-sub">${rem<=0?'Пора міняти мастило. ':rem<=1000?'Скоро заміна. ':''}Остання заміна на ${nf(last)} км, наступна на ${nf(last+int)} км, зараз ${nf(cur)} км.</p>`;
+  }
+  $('#oil').innerHTML=`<h2>Заміна мастила</h2>${top}
+    <div class="oil-form"><div class="grid2">
+      <label class="f"><span>Остання заміна, км</span><input id="oilLast" type="number" inputmode="numeric" min="0" value="${last??''}"></label>
+      <label class="f"><span>Інтервал, км</span><input id="oilInt" type="number" inputmode="numeric" min="1" value="${int}"></label>
+    </div><div class="btns"><button class="btn" id="oilSave">Зберегти</button><button class="btn ghost" id="oilNow">Замінив зараз</button></div></div>`;
+  $('#oilSave').onclick=()=>{
+    const l=parseInt($('#oilLast').value),i=parseInt($('#oilInt').value);
+    if(isNaN(l)||l<0)return toast('Вкажіть пробіг останньої заміни',true);
+    cfg.oilLast=l;cfg.oilInt=i>0?i:10000;saveCfg();renderFuel();toast('Збережено');
+  };
+  $('#oilNow').onclick=()=>{
+    if(cur==null)return toast('Спочатку додайте заправку з пробігом',true);
+    if(confirm(`Записати заміну мастила на пробігу ${nf(cur)} км?`)){cfg.oilLast=cur;saveCfg();renderFuel();toast('Заміну записано')}
+  };
+}
+const blankFuel=()=>({id:uid(),date:today(),odo:'',liters:'',total:'',price:''});
+function drawFuel(){
+  const f=sheet.f,el=$('#sheet'),g=id=>$('#'+id);
+  el.innerHTML=head(sheet.title)+(sheet.sub?`<p class="sub">${esc(sheet.sub)}</p>`:'')+`
+    <label class="f"><span>Дата</span><input type="date" id="fDate" value="${esc(f.date)}"></label>
+    <label class="f"><span>Загальний пробіг на одометрі, км</span><input id="fOdo" type="number" inputmode="numeric" min="0" value="${esc(f.odo)}"></label>
+    <div class="grid2">
+      <label class="f"><span>Літрів</span><input id="fL" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(f.liters)}"></label>
+      <label class="f"><span>Сума, ${esc(cfg.cur)}</span><input id="fT" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(f.total)}"></label>
+    </div>
+    <label class="f"><span>Ціна за літр</span><input id="fP" type="number" step="0.001" min="0" inputmode="decimal" value="${esc(f.price)}"></label>
+    <div class="tot"><span>Витрата від попередньої заправки</span><span id="fCons"></span></div>
+    <p class="hint" style="margin:-6px 0 16px">Рахується для заправок до повного бака.</p>
+    <div class="btns"><button class="btn main" id="fSave" type="button">Зберегти</button>${sheet.editId?'<button class="btn danger" id="fDel" type="button">Видалити</button>':''}</div>`;
+  const upd=()=>{
+    const odo=Math.round(fnum(g('fOdo').value)),L=fnum(g('fL').value);
+    let prev=null;fuel.forEach(x=>{if(x.id!==sheet.editId&&x.odo<odo&&(!prev||x.odo>prev.odo))prev=x});
+    const el2=g('fCons');
+    if(!odo||!L){el2.textContent='—';return}
+    el2.textContent=prev?nf(L/(odo-prev.odo)*100,1)+' л/100 км':'перша заправка';
+    el2.style.cssText='color:var(--g);text-shadow:var(--glow-g)';
+  };
+  const sync=src=>{
+    const L=fnum(g('fL').value);let T=fnum(g('fT').value),P=fnum(g('fP').value);
+    if(src==='p'){if(L&&P)g('fT').value=rnd(L*P,2)}
+    else if(L&&T)g('fP').value=rnd(T/L,2);
+    else if(src==='l'&&L&&P)g('fT').value=rnd(L*P,2);
+    upd();
+  };
+  g('fOdo').oninput=upd;g('fL').oninput=()=>sync('l');g('fT').oninput=()=>sync('t');g('fP').oninput=()=>sync('p');
+  upd();
+  g('shX').onclick=closeSheet;
+  g('fSave').onclick=()=>{
+    const odo=Math.round(fnum(g('fOdo').value)),L=fnum(g('fL').value),P=fnum(g('fP').value);let T=fnum(g('fT').value);
+    if(!odo)return toast('Вкажіть пробіг на одометрі',true);
+    if(!L)return toast('Вкажіть кількість літрів',true);
+    if(!T&&P)T=L*P;
+    if(!T)return toast('Вкажіть суму',true);
+    const id=sheet.editId||f.id;
+    if(fuel.some(x=>x.odo===odo&&x.id!==id))return toast('Заправка з таким пробігом уже є',true);
+    const rec={id,date:g('fDate').value||today(),odo,liters:rnd(L,2),total:rnd(T,2),price:rnd(T/L,3)};
+    if(sheet.editId)fuel=fuel.map(x=>x.id===id?rec:x);else fuel.push(rec);
+    saveFuel();renderAll();closeSheet();toast('Заправку збережено');
+  };
+  if(sheet.editId)g('fDel').onclick=()=>{fuel=fuel.filter(x=>x.id!==sheet.editId);saveFuel();renderAll();closeSheet();toast('Заправку видалено')};
+}
+function drawFuelPhoto(){
+  const s=sheet;
+  const slot=(id,title,img)=>`<button class="slot ${img?'has':''}" id="${id}" type="button">${img?`<img alt="" src="data:image/jpeg;base64,${img}">`:''}<b>${title}</b><span>${img?'Фото додано, натисніть щоб замінити':'Зробити або обрати фото'}</span></button>`;
+  $('#sheet').innerHTML=head('Заправка за фото')+`<p class="sub">Сфотографуйте чек із заправки та одометр. Достатньо одного фото, решту дописати вручну можна на наступному кроці.</p>
+    <div class="slots">${slot('slR','Чек',s.rcpt)}${slot('slO','Одометр',s.odo)}</div>
+    <div class="btns"><button class="btn main" id="fGo" type="button" ${s.rcpt||s.odo?'':'disabled'}>Розпізнати</button></div>`;
+  $('#shX').onclick=closeSheet;
+  $('#slR').onclick=()=>$('#fileR').click();
+  $('#slO').onclick=()=>$('#fileO').click();
+  $('#fGo').onclick=runFuelAI;
+}
+['R','O'].forEach(k=>{
+  $('#file'+k).onchange=async e=>{
+    const f=e.target.files[0];e.target.value='';if(!f||!sheet||sheet.mode!=='fuelphoto')return;
+    const s=sheet;
+    try{const d=await loadImage(f);if(sheet!==s)return;s[k==='R'?'rcpt':'odo']=d;drawFuelPhoto()}
+    catch(err){toast(err.message,true)}
+  };
+});
+function fuelPrompt(){
+  return `Ти помічник для обліку пального. Сьогодні ${today()}. Із фото чека заправки та/або фото одометра витягни дані. Відповідай ЛИШЕ валідним JSON-об'єктом без пояснень:
+{"date":"YYYY-MM-DD" або null,"liters":число літрів або null,"total":загальна сума до сплати числом або null,"price_per_liter":ціна за літр числом або null,"odometer":загальний пробіг у кілометрах цілим числом або null}
+Одометр — це загальний пробіг автомобіля, а не добовий (trip). Якщо значення не видно чітко — став null і нічого не вигадуй. Числа без валюти та одиниць.`;
+}
+async function runFuelAI(){
+  const s=sheet;
+  if(!cfg.key)return toast('Спочатку додайте API ключ у налаштуваннях',true);
+  const parts=[];
+  if(s.rcpt)parts.push({text:'Фото чека з заправки:'},{inline_data:{mime_type:'image/jpeg',data:s.rcpt}});
+  if(s.odo)parts.push({text:'Фото одометра:'},{inline_data:{mime_type:'image/jpeg',data:s.odo}});
+  const mine={mode:'busy',msg:'Gemini читає чек і одометр…'};openSheet(mine);
+  try{
+    const text=await gemini(parts,fuelPrompt());
+    if(sheet!==mine)return;
+    let j;try{j=JSON.parse(text.replace(/^```(?:json)?|```$/g,'').trim())}catch(e){throw new Error('Не вдалося розібрати відповідь Gemini')}
+    if(Array.isArray(j))j=j[0]||{};
+    const L=fnum(j.liters),T=fnum(j.total);let P=fnum(j.price_per_liter);
+    if(!P&&L&&T)P=rnd(T/L,2);
+    const f={id:uid(),date:/^\d{4}-\d{2}-\d{2}$/.test(j.date)?j.date:today(),odo:Math.round(fnum(j.odometer))||'',liters:L||'',total:T||'',price:P||''};
+    const miss=[!f.odo&&'пробіг',!f.liters&&'літри',!f.total&&'суму'].filter(Boolean);
+    openSheet({mode:'fuel',title:'Перевірте заправку',sub:miss.length?`Не вдалося розпізнати: ${miss.join(', ')}. Допишіть вручну.`:'Gemini розпізнав дані. Перевірте й збережіть.',f});
+  }catch(e){
+    if(sheet!==mine)return;
+    toast(e.message,true);openSheet({mode:'fuelphoto',rcpt:s.rcpt,odo:s.odo});
+  }
+}
+$('#fuelList').onclick=e=>{
+  const r=e.target.closest('.row');if(!r)return;
+  const f=fuel.find(x=>x.id===r.dataset.id);if(!f)return;
+  openSheet({mode:'fuel',title:'Редагувати заправку',editId:f.id,f:{...f}});
+};
+$('#aFuelManual').onclick=()=>openSheet({mode:'fuel',title:'Нова заправка',f:blankFuel()});
+$('#aFuelPhoto').onclick=()=>{
+  if(!cfg.key)return toast('Додайте API ключ Gemini у налаштуваннях',true);
+  openSheet({mode:'fuelphoto'});
+};
+
+/* ---------- currencies ---------- */
+function fillCur(){
+  const pop=['UAH','PLN','EUR','USD','GBP','CZK','CHF','CAD','SEK','NOK','DKK','HUF','RON','BGN','TRY','JPY','CNY','AUD'];
+  let all=[];try{all=Intl.supportedValuesOf('currency')}catch(e){}
+  let dn=null;try{dn=new Intl.DisplayNames(['uk'],{type:'currency'})}catch(e){}
+  const opt=c=>{let n=c;try{n=dn?dn.of(c):c}catch(e){}return `<option value="${c}">${esc(n===c?c:n+' ('+c+')')}</option>`};
+  const rest=all.filter(c=>!pop.includes(c));
+  if(!pop.includes(cfg.cur)&&!rest.includes(cfg.cur))rest.unshift(cfg.cur);
+  $('#sCur').innerHTML=`<optgroup label="Популярні">${pop.map(opt).join('')}</optgroup>`+(rest.length?`<optgroup label="Усі валюти">${rest.map(opt).join('')}</optgroup>`:'');
+}
+
+/* edit */
+$('#list').onclick=e=>{
+  const r=e.target.closest('.row');if(!r)return;
+  const t=tx.find(x=>x.id===r.dataset.id);if(!t)return;
+  openSheet({mode:'review',title:'Редагувати операцію',editId:t.id,drafts:[{...t}]});
+};
+
+/* entry points */
+$('#aManual').onclick=()=>openSheet({mode:'review',title:'Нова операція',drafts:[blank()]});
+$('#aVoice').onclick=()=>{
+  if(!cfg.key)toast('Додайте API ключ Gemini у налаштуваннях',true);
+  openSheet({mode:'voice'});
+};
+$('#aPhoto').onclick=()=>{
+  if(!cfg.key)return toast('Додайте API ключ Gemini у налаштуваннях',true);
+  $('#file').click();
+};
+
+fillCur();loadSettings();renderAll();
+</script>
+</body>
+</html>
