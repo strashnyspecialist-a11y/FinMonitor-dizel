@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#09090c; --card:#141419; --card2:#1c1c23; --line:#2a2a33;
@@ -42,6 +43,15 @@ svg{display:block}
 .sdot.wait{background:var(--warn)}
 .sdot.err{background:var(--r)}
 .hero{flex:1;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.hero-top{flex:1;display:flex;justify-content:flex-end;align-items:flex-start;padding-top:4px}
+.remfab{
+  width:112px;height:112px;border-radius:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  background:rgba(140,125,255,.14);border:1.5px solid var(--acc);color:var(--acc);box-shadow:0 0 30px rgba(140,125,255,.25);
+  font-weight:700;font-size:12px;transition:transform .1s,background .15s;
+}
+.remfab:hover{background:rgba(140,125,255,.22)}
+.remfab:active{transform:scale(.96)}
+.remfab svg{width:44px;height:44px}
 .hero small{font-size:13px;color:var(--mut);font-weight:600}
 .balance{
   font-weight:800;font-size:clamp(36px,12.5vw,60px);line-height:1.05;letter-spacing:-.035em;white-space:nowrap;
@@ -76,7 +86,7 @@ svg{display:block}
 .navb.wide{grid-column:1/-1;background:var(--card2);padding:16px 14px}
 .navb.wide svg:last-child{margin-left:auto}
 @media(max-height:700px){
-  .app{gap:10px}.hero{min-height:110px}.act{min-height:76px;padding:10px 4px}.ico{width:32px;height:32px}.navb{padding:11px 12px}.navb.wide{padding:13px 12px}.pair{margin-top:6px}
+  .app{gap:10px}.hero{min-height:110px}.remfab{width:84px;height:84px;border-radius:24px;gap:4px;font-size:11px}.remfab svg{width:32px;height:32px}.act{min-height:76px;padding:10px 4px}.ico{width:32px;height:32px}.navb{padding:11px 12px}.navb.wide{padding:13px 12px}.pair{margin-top:6px}
 }
 
 /* pages */
@@ -114,7 +124,7 @@ input,select,textarea{width:100%;background:#0f0f14;border:1px solid var(--line)
 input::placeholder,textarea::placeholder{color:var(--faint)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(140,125,255,.18)}
 option{background:#14141a;color:var(--tx)}
-input[type=date]{color-scheme:dark}
+input[type=date],input[type=time],input[type=datetime-local]{color-scheme:dark}
 .hint{font-size:12px;color:var(--faint);margin-top:6px;font-weight:500}
 .check{display:flex;gap:10px;align-items:center;margin:0 0 16px;font-weight:600;color:var(--tx)}
 .check input{width:20px;height:20px;accent-color:var(--acc)}
@@ -150,6 +160,10 @@ h2:first-child{margin-top:0}
 .slot b,.slot span{position:relative}
 .slot span{font-size:12px;color:var(--mut)}
 .slot .rm{position:absolute;top:8px;right:8px;z-index:1;background:rgba(9,9,12,.75)}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:8px 11px;border-radius:10px;border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--faint)}
+.chip.on{background:rgba(140,125,255,.18);color:var(--acc);border-color:var(--acc)}
 
 /* sheet */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:flex-end;justify-content:center;z-index:20}
@@ -198,6 +212,7 @@ h2:first-child{margin-top:0}
   <header class="top"><div class="brand">Мої витрати<button class="sdot off" id="sdot" aria-label="Стан синхронізації з сервером"></button></div><div class="date" id="dateNow"></div></header>
 
   <section class="hero">
+    <div class="hero-top"><button class="remfab" id="aRemVoice" aria-label="Голосове нагадування"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Нагадування</span></button></div>
     <small>Баланс</small>
     <div class="balance" id="bal">0,00</div>
     <div class="pair">
@@ -219,7 +234,8 @@ h2:first-child{margin-top:0}
     <button class="navb wide" data-page="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Список витрат<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
     <button class="navb" data-page="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Статистика</button>
     <button class="navb" data-page="fuel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M14 9h2.5a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h4"/></svg>Пальне</button>
-    <button class="navb wide" data-page="set" style="background:var(--card)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Налаштування<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="navb" data-page="rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Нагадування</button>
+    <button class="navb" data-page="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Налаштування</button>
   </nav>
 </main>
 
@@ -259,19 +275,37 @@ h2:first-child{margin-top:0}
     <div id="fuelList"></div>
   </div>
 </section>
+<section class="page" id="p-rem">
+  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Нагадування</h1></div>
+  <div class="pg">
+    <div id="remWarn"></div>
+    <div class="btns" style="margin-bottom:8px"><button class="btn main" id="remAdd">＋ Додати</button><button class="btn" id="remVoice">Голосом</button></div>
+    <div id="remList"></div>
+  </div>
+</section>
 <section class="page" id="p-set">
   <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Налаштування</h1></div>
   <div class="pg">
-    <h2>Сервер даних</h2>
-    <label class="f"><span>Адреса сервера</span>
-      <input type="url" id="sSrv" inputmode="url" autocomplete="off" autocapitalize="off" placeholder="https://my-server.example.com">
-      <div class="hint">Усі витрати та заправки зберігаються на цьому сервері. Якщо додаток відкрито з самого сервера, впишіть його адресу.</div>
+    <h2>Хмара (Supabase)</h2>
+    <label class="f"><span>Project URL</span>
+      <input type="url" id="sSbUrl" inputmode="url" autocomplete="off" autocapitalize="off" placeholder="https://xxxx.supabase.co">
     </label>
-    <label class="f"><span>Токен доступу</span>
-      <input type="password" id="sTok" autocomplete="off" placeholder="Той самий, що в TOKEN на сервері">
+    <label class="f"><span>Публічний ключ (anon / publishable)</span>
+      <input type="password" id="sSbKey" autocomplete="off" placeholder="eyJ... або sb_publishable_...">
+      <div class="hint">Project Settings → API. Секретний ключ service_role сюди вставляти не можна.</div>
     </label>
-    <div class="btns"><button class="btn" id="sSrvTest">Перевірити й синхронізувати</button></div>
+    <label class="f"><span>Email</span><input type="email" id="sEmail" autocomplete="username" autocapitalize="off"></label>
+    <label class="f"><span>Пароль</span><input type="password" id="sPass" autocomplete="current-password"></label>
+    <div class="btns"><button class="btn main" id="sLogin">Увійти</button><button class="btn" id="sLogout">Вийти</button></div>
+    <p class="hint" id="sAuth" style="margin-bottom:0"></p>
     <p class="hint" id="sStat" style="margin-bottom:6px"></p>
+
+    <h2>Сповіщення в Telegram</h2>
+    <p class="sub">1. У Telegram відкрийте @BotFather, створіть бота командою /newbot і скопіюйте токен. 2. Надішліть своєму боту повідомлення /start. 3. Вставте токен нижче й натисніть «Знайти chat ID».</p>
+    <label class="f"><span>Токен бота</span><input type="password" id="tgTok" autocomplete="off" placeholder="123456:ABC..."></label>
+    <label class="f"><span>Chat ID</span><input id="tgChat" inputmode="numeric" autocomplete="off" placeholder="Наприклад 123456789"></label>
+    <div class="btns"><button class="btn" id="tgFind">Знайти chat ID</button><button class="btn main" id="tgSave">Зберегти й надіслати тест</button></div>
+    <p class="hint" id="tgStat"></p>
 
     <h2>Gemini AI</h2>
     <label class="f"><span>API ключ</span>
@@ -318,7 +352,7 @@ const store={
 };
 let tx=JSON.parse(store.get('sp.tx')||'[]');
 let fuel=JSON.parse(store.get('sp.fuel')||'[]');
-let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,oilLast:null,oilInt:10000,srvUrl:'',srvToken:''},JSON.parse(store.get('sp.cfg')||'{}'));
+let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,oilLast:null,oilInt:10000,sbUrl:'',sbKey:''},JSON.parse(store.get('sp.cfg')||'{}'));
 /* застарілі моделі (2.x) вимкнено Google, переходимо на актуальну */
 if(/^gemini-2\./.test(cfg.model||'')||!cfg.model)cfg.model=DEF_MODEL;
 const meta=Object.assign({updatedAt:0,dirty:false},JSON.parse(store.get('sp.meta')||'{}'));
@@ -338,23 +372,41 @@ function applyState(s){
   store.set('sp.tx',JSON.stringify(tx));store.set('sp.fuel',JSON.stringify(fuel));store.set('sp.cfg',JSON.stringify(cfg));
   meta.updatedAt=+s.updatedAt||0;meta.dirty=false;saveMeta();
 }
-const srvOn=()=>!!cfg.srvUrl;
-async function srv(path,opt={}){
-  let r;
+let sb=null,sbUser=null,sbSig='';
+function initSb(){
+  sb=null;sbUser=null;sbSig=cfg.sbUrl+'|'+cfg.sbKey;
+  if(!cfg.sbUrl||!cfg.sbKey||!window.supabase)return;
   try{
-    r=await fetch(cfg.srvUrl.replace(/\/+$/,'')+path,{...opt,headers:{'Content-Type':'application/json',...(cfg.srvToken?{Authorization:'Bearer '+cfg.srvToken}:{})}});
-  }catch(e){throw new Error('немає зв’язку з сервером')}
-  if(r.status===401)throw new Error('невірний токен доступу');
-  if(!r.ok)throw new Error('помилка сервера '+r.status);
-  return r.json();
+    sb=window.supabase.createClient(cfg.sbUrl,cfg.sbKey,{auth:{persistSession:true,autoRefreshToken:true}});
+    sb.auth.onAuthStateChange((ev,ses)=>{
+      const u=ses?.user||null,was=sbUser?.id;sbUser=u;
+      setTimeout(()=>{
+        if(u&&u.id!==was){pull();loadRems();tgStatus()}
+        if(!u){tgOk=null;setSync('off')}
+        loadSettings();renderRems();
+      },0);
+    });
+  }catch(e){sb=null}
+}
+const ensureSb=()=>{if(!sb||sbSig!==cfg.sbUrl+'|'+cfg.sbKey)initSb();return !!sb};
+const srvOn=()=>!!(sb&&sbUser);
+async function srvGet(){
+  const {data,error}=await sb.from('app_state').select('data').maybeSingle();
+  if(error)throw new Error(error.message);
+  return data?data.data:{updatedAt:0};
+}
+async function srvPut(snap){
+  const {error}=await sb.from('app_state').upsert({user_id:sbUser.id,data:snap});
+  if(error)throw new Error(error.message);
 }
 let syncSt='off',syncMsg='',pushT=null,pushing=false;
-const SYNC_TXT={off:'Сервер не підключено. Дані зберігаються лише в цьому браузері.',wait:'Синхронізація…',ok:'Синхронізовано з сервером.'};
+const offTxt=()=>!sb?'Supabase не підключено. Дані зберігаються лише в цьому браузері.':'Увійдіть в акаунт, щоб дані синхронізувалися.';
+const SYNC_TXT={wait:'Синхронізація…',ok:'Синхронізовано з хмарою.'};
 function setSync(st,msg){
   syncSt=st;syncMsg=msg||'';
-  const d=$('#sdot');if(d){d.className='sdot '+st;d.title=st==='err'?msg:SYNC_TXT[st]}
+  const d=$('#sdot');if(d){d.className='sdot '+st;d.title=st==='err'?msg:(SYNC_TXT[st]||'')}
   const s=$('#sStat');
-  if(s)s.textContent=st==='err'?`Помилка: ${msg}. Зміни збережено локально й буде надіслано, коли зв’язок з’явиться.`:SYNC_TXT[st];
+  if(s)s.textContent=st==='err'?`Помилка: ${msg}. Зміни збережено локально й буде надіслано, коли зв’язок з’явиться.`:st==='off'?offTxt():SYNC_TXT[st];
 }
 function queuePush(){
   if(!srvOn())return setSync('off');
@@ -365,7 +417,7 @@ async function push(){
   if(pushing){queuePush();return false}
   pushing=true;const sent=meta.updatedAt;let ok=false;
   try{
-    await srv('/api/state',{method:'PUT',body:JSON.stringify(snapshot())});
+    await srvPut(snapshot());
     if(meta.updatedAt===sent){meta.dirty=false;saveMeta();setSync('ok')}else queuePush();
     ok=true;
   }catch(e){setSync('err',e.message)}
@@ -375,7 +427,7 @@ async function pull(){
   if(!srvOn()){setSync('off');return false}
   setSync('wait');
   try{
-    const s=await srv('/api/state');const sv=+s.updatedAt||0;
+    const s=await srvGet();const sv=+s.updatedAt||0;
     const hasLocal=tx.length||fuel.length||cfg.oilLast!=null;
     if(!sv&&hasLocal){if(!meta.updatedAt)meta.updatedAt=Date.now();meta.dirty=true;saveMeta();return await push()}
     if(meta.dirty||sv<meta.updatedAt)return await push();
@@ -455,19 +507,19 @@ function renderStats(){
     <div class="track"><div class="fill" style="width:${Math.max(3,v/rows[0][1]*100)}%"></div></div></div>`).join('')
     :'<div class="empty">За цей період витрат немає.</div>';
 }
-function renderAll(){renderHero();renderList();renderStats();renderFuel()}
+function renderAll(){renderHero();renderList();renderStats();renderFuel();renderRems()}
 
 /* ---------- tabs ---------- */
 function openPage(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('open',p.id==='p-'+n));
-  $('#p-'+n).scrollTop=0;renderAll();
+  $('#p-'+n).scrollTop=0;renderAll();if(n==='rem')loadRems();
 }
 function closePage(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('open'));renderHero()}
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPage(b.dataset.page));
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=closePage);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheet)closePage()});
 window.addEventListener('resize',()=>fitBal());
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&srvOn()&&!pushing)pull()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&srvOn()){if(!pushing)pull();loadRems()}});
 $('#q').oninput=renderList;
 $('#period').onchange=renderStats;
 $('#sdot').onclick=async()=>{const ok=await pull();toast(ok?'Синхронізовано з сервером':syncMsg||'Помилка синхронізації',!ok)};
@@ -475,24 +527,67 @@ $('#sdot').onclick=async()=>{const ok=await pull();toast(ok?'Синхроніз�
 /* ---------- settings ---------- */
 function loadSettings(){
   $('#sKey').value=cfg.key;$('#sModel').value=cfg.model;$('#sCur').value=cfg.cur;$('#sSplit').checked=cfg.split;
-  $('#sSrv').value=cfg.srvUrl;$('#sTok').value=cfg.srvToken;
-  if(/^https?:/.test(location.protocol))$('#sSrv').placeholder=location.origin;
-  setSync(syncSt,syncMsg);
+  $('#sSbUrl').value=cfg.sbUrl;$('#sSbKey').value=cfg.sbKey;
+  if(sbUser&&!$('#sEmail').value)$('#sEmail').value=sbUser.email||'';
+  $('#sAuth').textContent=sbUser?'Ви увійшли як '+sbUser.email+'.':sb?'Вхід не виконано.':'';
+  renderTgStat();setSync(syncSt,syncMsg);
 }
-$('#sSrv').onchange=e=>{
-  let v=e.target.value.trim();
-  if(v&&!/^https?:\/\//i.test(v))v='https://'+v;
-  cfg.srvUrl=v.replace(/\/+$/,'');e.target.value=cfg.srvUrl;saveCfg();pull();
+const readSb=()=>{
+  let u=$('#sSbUrl').value.trim().replace(/\/+$/,'');
+  if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
+  cfg.sbUrl=u;cfg.sbKey=$('#sSbKey').value.trim();$('#sSbUrl').value=u;saveCfg();
 };
-$('#sTok').onchange=e=>{cfg.srvToken=e.target.value.trim();saveCfg();if(srvOn())pull()};
-$('#sSrvTest').onclick=async()=>{
-  cfg.srvUrl=$('#sSrv').value.trim().replace(/\/+$/,'');cfg.srvToken=$('#sTok').value.trim();
-  if(cfg.srvUrl&&!/^https?:\/\//i.test(cfg.srvUrl))cfg.srvUrl='https://'+cfg.srvUrl;
-  $('#sSrv').value=cfg.srvUrl;saveCfg();
-  if(!srvOn())return toast('Вкажіть адресу сервера',true);
-  const b=$('#sSrvTest');b.disabled=true;
-  const ok=await pull();
-  b.disabled=false;toast(ok?'Сервер підключено':syncMsg||'Помилка підключення',!ok);
+$('#sSbUrl').onchange=$('#sSbKey').onchange=()=>{readSb();ensureSb();loadSettings()};
+$('#sLogin').onclick=async()=>{
+  readSb();
+  if(!cfg.sbUrl||!cfg.sbKey)return toast('Вкажіть Project URL і публічний ключ',true);
+  if(!ensureSb())return toast('Не вдалося завантажити Supabase. Перевірте інтернет.',true);
+  const email=$('#sEmail').value.trim(),password=$('#sPass').value;
+  if(!email||!password)return toast('Введіть email і пароль',true);
+  const b=$('#sLogin');b.disabled=true;
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  b.disabled=false;
+  if(error)return toast(error.message==='Invalid login credentials'?'Невірний email або пароль':error.message,true);
+  $('#sPass').value='';toast('Вхід виконано');
+};
+$('#sLogout').onclick=async()=>{
+  if(!sb||!sbUser)return toast('Ви не увійшли',true);
+  await sb.auth.signOut();toast('Ви вийшли');
+};
+let tgOk=null;
+function renderTgStat(){
+  const e=$('#tgStat');if(!e)return;
+  e.textContent=!srvOn()?'Спочатку увійдіть в акаунт Supabase.':tgOk?'Telegram підключено. Токен збережено на сервері й тут не відображається.':'Telegram ще не налаштовано.';
+}
+async function tgStatus(){
+  if(!srvOn()){tgOk=null;renderTgStat();return}
+  const {data,error}=await sb.rpc('telegram_status');
+  tgOk=error?null:!!data;renderTgStat();renderRems();
+}
+const tgErr=e=>e instanceof TypeError?'Немає зв’язку з Telegram':e.message;
+$('#tgFind').onclick=async()=>{
+  const t=$('#tgTok').value.trim();if(!t)return toast('Спочатку вставте токен бота',true);
+  try{
+    const j=await (await fetch(`https://api.telegram.org/bot${t}/getUpdates`)).json();
+    if(!j.ok)throw new Error(j.description||'Невірний токен');
+    const m=[...j.result].reverse().find(u=>u.message?.chat?.id);
+    if(!m)return toast('Надішліть боту /start і натисніть ще раз',true);
+    $('#tgChat').value=String(m.message.chat.id);toast('Chat ID знайдено');
+  }catch(e){toast(tgErr(e),true)}
+};
+$('#tgSave').onclick=async()=>{
+  if(!srvOn())return toast('Спочатку увійдіть в акаунт Supabase',true);
+  const t=$('#tgTok').value.trim(),c=$('#tgChat').value.trim();
+  if(!t||!c)return toast('Вкажіть токен і chat ID',true);
+  const b=$('#tgSave');b.disabled=true;
+  try{
+    const j=await (await fetch(`https://api.telegram.org/bot${t}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c,text:'✅ Нагадування підключено'})})).json();
+    if(!j.ok)throw new Error(j.description||'Telegram відхилив запит');
+    const {error}=await sb.rpc('set_telegram',{p_token:t,p_chat:c});
+    if(error)throw new Error(error.message);
+    $('#tgTok').value='';tgOk=true;renderTgStat();renderRems();toast('Telegram підключено');
+  }catch(e){toast(tgErr(e),true)}
+  b.disabled=false;
 };
 $('#sKey').onchange=e=>{cfg.key=e.target.value.trim();saveCfg();toast('Ключ збережено')};
 $('#sModel').onchange=e=>{cfg.model=e.target.value.trim()||DEF_MODEL;e.target.value=cfg.model;saveCfg();toast('Модель збережено')};
@@ -567,7 +662,7 @@ function parseItems(text){
 /* ---------- sheet ---------- */
 let sheet=null,rec=null,recStream=null,recChunks=[],recTimer=null,recT0=0;
 const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
-const backVoice=()=>openSheet({mode:'voice'});
+const backVoice=p=>()=>openSheet({mode:'voice',purpose:p});
 function openSheet(s){sheet=s;renderSheet();$('#ov').classList.add('open')}
 function closeSheet(){stopStream();$('#ov').classList.remove('open');sheet=null}
 $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&sheet?.mode!=='busy')closeSheet()});
@@ -577,21 +672,23 @@ function head(title){return `<div class="sh-h"><h3>${title}</h3><button class="x
 function renderSheet(){
   const el=$('#sheet');
   if(sheet.mode==='voice'){
-    el.innerHTML=head('Голосовий ввід')+`
-      <p class="sub">Натисніть і розкажіть про витрати, наприклад: «вчора купив продукти на 540 гривень і заплатив 120 за таксі».</p>
+    const rem=sheet.purpose==='rem';
+    el.innerHTML=head(rem?'Голосове нагадування':'Голосовий ввід')+`
+      <p class="sub">${rem?'Натисніть і скажіть, що й коли нагадати, наприклад: «завтра о 9 ранку нагадай подзвонити лікарю» або «щодня о 8:30 пити вітаміни».':'Натисніть і розкажіть про витрати, наприклад: «вчора купив продукти на 540 гривень і заплатив 120 за таксі».'}</p>
       <button class="mic" id="micBtn" aria-label="Почати запис">${MIC}</button>
       <p class="center sub" id="micSt">Готово до запису</p>
       <div class="or">або напишіть текстом</div>
-      <textarea id="txtIn" rows="3" placeholder="Кава 85, обід 240, зарплата 30000"></textarea>
+      <textarea id="txtIn" rows="3" placeholder="${rem?'Через 2 години забрати посилку':'Кава 85, обід 240, зарплата 30000'}"></textarea>
       <div class="btns" style="margin-top:12px"><button class="btn" id="txtGo">Розпізнати текст</button></div>`;
     $('#micBtn').onclick=toggleRec;
     $('#txtGo').onclick=()=>{
       const v=$('#txtIn').value.trim();if(!v)return toast('Введіть текст',true);
-      runAI([{text:v}],'текстового повідомлення користувача',backVoice);
+      rem?runRemAI([{text:v}],backVoice('rem')):runAI([{text:v}],'текстового повідомлення користувача',backVoice('tx'));
     };
   }else if(sheet.mode==='busy'){
     el.innerHTML=`<div class="center"><div class="spin"></div><p>${esc(sheet.msg)}</p></div>`;
     return;
+  }else if(sheet.mode==='rem'){drawRem();return;
   }else if(sheet.mode==='photos'){drawPhotos();return;
   }else if(sheet.mode==='fuel'){drawFuel();return;
   }else if(sheet.mode==='fuelphoto'){drawFuelPhoto();return;
@@ -681,6 +778,7 @@ async function toggleRec(){
   if(!navigator.mediaDevices||!window.MediaRecorder)return toast('Браузер не підтримує запис голосу',true);
   try{recStream=await navigator.mediaDevices.getUserMedia({audio:true})}
   catch(e){return toast('Немає доступу до мікрофона. Дозвольте його в налаштуваннях браузера.',true)}
+  const purpose=sheet?.purpose||'tx';
   recChunks=[];rec=new MediaRecorder(recStream);
   rec.ondataavailable=e=>e.data.size&&recChunks.push(e.data);
   rec.onstop=async()=>{
@@ -691,8 +789,10 @@ async function toggleRec(){
     const mine={mode:'busy',msg:'Розпізнаю голос…'};openSheet(mine);
     try{
       const wav=await toWav(blob);
-      await runAI([{inline_data:{mime_type:'audio/wav',data:b64(wav)}},{text:'Розпізнай витрати та доходи з цього голосового повідомлення.'}],'голосового повідомлення користувача',backVoice);
-    }catch(e){toast('Не вдалося обробити запис',true);openSheet({mode:'voice'})}
+      const audio={inline_data:{mime_type:'audio/wav',data:b64(wav)}};
+      if(purpose==='rem')await runRemAI([audio,{text:'Розпізнай нагадування з цього голосового повідомлення.'}],backVoice('rem'));
+      else await runAI([audio,{text:'Розпізнай витрати та доходи з цього голосового повідомлення.'}],'голосового повідомлення користувача',backVoice('tx'));
+    }catch(e){toast('Не вдалося обробити запис',true);openSheet({mode:'voice',purpose})}
   };
   rec.start();recT0=Date.now();
   $('#micBtn').classList.add('on');$('#micBtn').setAttribute('aria-label','Зупинити запис');
@@ -926,6 +1026,199 @@ $('#aFuelPhoto').onclick=()=>{
   openSheet({mode:'fuelphoto'});
 };
 
+/* ---------- reminders ---------- */
+const TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(e){return 'UTC'}})();
+const WD=[['Пн',1],['Вт',2],['Ср',3],['Чт',4],['Пт',5],['Сб',6],['Нд',0]];
+const IVU={min:1,h:60,d:1440},IVL={min:'хвилин',h:'годин',d:'днів'},IVS={min:'хв',h:'год',d:'дн'};
+let rems=JSON.parse(store.get('sp.rems')||'[]');
+const dtl=d=>`${dstr(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const splitIv=m=>m%1440===0?{ivn:m/1440,ivu:'d'}:m%60===0?{ivn:m/60,ivu:'h'}:{ivn:m,ivu:'min'};
+function nextOcc(time,wds){
+  const [h,m]=time.split(':').map(Number),now=new Date();
+  for(let i=0;i<8;i++){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i,h,m,0,0);
+    if(d>now&&(!wds||wds.includes(d.getDay())))return d;
+  }
+  return null;
+}
+const blankRem=()=>{const d=new Date(Date.now()+3600e3);d.setMinutes(0,0,0);return {text:'',kind:'once',at:dtl(d),time:'09:00',weekdays:[1,2,3,4,5],ivn:1,ivu:'h',active:true}};
+function rowToDraft(r){
+  const d={id:r.id,text:r.text,kind:r.kind,at:dtl(new Date(r.next_at)),time:r.time_of_day||'09:00',weekdays:(r.weekdays||[]).slice(),ivn:1,ivu:'h',active:r.active};
+  if(r.kind==='interval')Object.assign(d,splitIv(r.interval_min||60));
+  return d;
+}
+function draftToRow(d){
+  const row={text:d.text.trim(),kind:d.kind,tz:TZ,active:d.active!==false,time_of_day:null,weekdays:[],interval_min:null};
+  const now=Date.now();
+  if(d.kind==='once'){
+    const t=new Date(d.at);
+    if(!d.at||isNaN(t))return 'Вкажіть дату й час';
+    if(row.active&&t.getTime()<=now)return 'Цей час уже минув. Оберіть час у майбутньому';
+    row.next_at=t.toISOString();
+  }else if(d.kind==='interval'){
+    const n=Math.round(+d.ivn);
+    if(!(n>0))return 'Вкажіть проміжок повтору';
+    row.interval_min=n*IVU[d.ivu];
+    let t=d.at?new Date(d.at):null;
+    if(!t||isNaN(t)||t.getTime()<=now)t=new Date(now+row.interval_min*60000);
+    row.next_at=t.toISOString();
+  }else{
+    if(!/^\d{2}:\d{2}$/.test(d.time||''))return 'Вкажіть час';
+    if(d.kind==='weekly'){
+      if(!d.weekdays.length)return 'Оберіть хоча б один день тижня';
+      row.weekdays=d.weekdays.slice().sort();
+    }
+    row.time_of_day=d.time;
+    row.next_at=nextOcc(d.time,d.kind==='weekly'?row.weekdays:null).toISOString();
+  }
+  return row;
+}
+const fmtDT=d=>new Date(d).toLocaleString('uk-UA',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+function remDesc(r){
+  if(r.kind==='once')return 'Один раз';
+  if(r.kind==='daily')return 'Щодня о '+r.time_of_day;
+  if(r.kind==='weekly')return WD.filter(([,n])=>(r.weekdays||[]).includes(n)).map(x=>x[0]).join(', ')+' о '+r.time_of_day;
+  const s=splitIv(r.interval_min||60);return `Кожні ${s.ivn} ${IVS[s.ivu]}`;
+}
+function renderRems(){
+  const w=$('#remWarn'),l=$('#remList');if(!w||!l)return;
+  w.innerHTML=!srvOn()
+    ?'<div class="card"><p class="oil-sub" style="margin:0">Нагадування зберігаються в Supabase. Підключіть його й увійдіть в акаунт у налаштуваннях.</p></div>'
+    :tgOk===false?'<div class="card"><p class="oil-sub" style="margin:0 0 12px">Telegram не налаштовано, тому сповіщення не надходитимуть.</p><button class="btn" id="goSet" type="button">Відкрити налаштування</button></div>':'';
+  if($('#goSet'))$('#goSet').onclick=()=>openPage('set');
+  const items=rems.slice().sort((a,b)=>(b.active-a.active)||(a.active?a.next_at.localeCompare(b.next_at):b.next_at.localeCompare(a.next_at)));
+  if(!items.length){l.innerHTML='<div class="empty">Нагадувань ще немає. Додайте перше кнопкою «Додати» або голосом.</div>';return}
+  l.innerHTML=items.map(r=>`<button class="row" data-id="${r.id}" style="${r.active?'':'opacity:.6'}">
+    <div style="min-width:0"><div class="what">${esc(r.text)}</div><div class="cat">${esc(remDesc(r))}</div></div>
+    <div class="rt"><div class="sum" style="${r.active?'':'color:var(--faint)'}">${r.active?esc(fmtDT(r.next_at)):(r.kind==='once'&&r.last_sent_at?'Надіслано':'Вимкнено')}</div></div></button>`).join('');
+}
+async function loadRems(){
+  if(!srvOn()){renderRems();return}
+  const {data,error}=await sb.from('reminders').select('*').order('next_at');
+  if(error)return toast('Нагадування: '+error.message,true);
+  rems=data||[];store.set('sp.rems',JSON.stringify(rems));renderRems();
+}
+$('#remList').onclick=e=>{
+  const r=e.target.closest('.row');if(!r)return;
+  const x=rems.find(v=>v.id===r.dataset.id);if(!x)return;
+  openSheet({mode:'rem',title:'Редагувати нагадування',editId:x.id,drafts:[rowToDraft(x)]});
+};
+const needLogin=()=>{if(srvOn())return false;toast('Спочатку підключіть Supabase й увійдіть у налаштуваннях',true);return true};
+$('#remAdd').onclick=()=>{if(needLogin())return;openSheet({mode:'rem',title:'Нове нагадування',drafts:[blankRem()]})};
+$('#remVoice').onclick=$('#aRemVoice').onclick=()=>{
+  if(needLogin())return;
+  if(!cfg.key)toast('Додайте API ключ Gemini у налаштуваннях',true);
+  openSheet({mode:'voice',purpose:'rem'});
+};
+function remFields(t){
+  const at=`<label class="f"><span>${t.kind==='interval'?'Перше нагадування (якщо порожньо, то через проміжок)':'Дата й час'}</span><input class="r-at" type="datetime-local" value="${esc(t.at)}"></label>`;
+  const time=`<label class="f"><span>Час</span><input class="r-time" type="time" value="${esc(t.time)}"></label>`;
+  if(t.kind==='once')return at;
+  if(t.kind==='daily')return time;
+  if(t.kind==='weekly')return `<div class="chips">${WD.map(([n,v])=>`<button type="button" class="chip ${t.weekdays.includes(v)?'on':''}" data-wd="${v}">${n}</button>`).join('')}</div>`+time;
+  return `<div class="grid2"><label class="f"><span>Кожні</span><input class="r-ivn" type="number" min="1" inputmode="numeric" value="${esc(t.ivn)}"></label><label class="f"><span>Одиниця</span><select class="r-ivu">${Object.entries(IVL).map(([k,n])=>`<option value="${k}" ${k===t.ivu?'selected':''}>${n}</option>`).join('')}</select></label></div>`+at;
+}
+function drawRem(){
+  const d=sheet.drafts;
+  $('#sheet').innerHTML=head(sheet.title)+(sheet.sub?`<p class="sub">${esc(sheet.sub)}</p>`:'')+
+  d.map((t,i)=>`<div class="draft" data-i="${i}">
+    <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:10px">
+      <input class="r-text" placeholder="Що нагадати" value="${esc(t.text)}" aria-label="Що нагадати">
+      <button class="rm" type="button" aria-label="Видалити рядок">✕</button>
+    </div>
+    <label class="f"><span>Коли нагадувати</span><select class="r-kind">${[['once','Один раз'],['daily','Щодня в певний час'],['weekly','У певні дні тижня'],['interval','Через рівні проміжки часу']].map(([v,n])=>`<option value="${v}" ${v===t.kind?'selected':''}>${n}</option>`).join('')}</select></label>
+    ${remFields(t)}
+    ${sheet.editId?`<label class="check"><input class="r-act" type="checkbox" ${t.active?'checked':''}> Активне</label>`:''}
+  </div>`).join('')+
+  `${sheet.editId?'':'<div class="btns"><button class="btn ghost" id="remMore" type="button">Додати рядок</button></div>'}
+   <div class="btns" style="margin-top:14px"><button class="btn main" id="remSave" type="button">Зберегти</button>${sheet.editId?'<button class="btn danger" id="remDel" type="button">Видалити</button>':''}</div>`;
+  $('#shX').onclick=closeSheet;
+  $('#remSave').onclick=saveRems;
+  if($('#remMore'))$('#remMore').onclick=()=>{d.push(blankRem());drawRem()};
+  if($('#remDel'))$('#remDel').onclick=async()=>{
+    if(!confirm('Видалити нагадування?'))return;
+    const {error}=await sb.from('reminders').delete().eq('id',sheet.editId);
+    if(error)return toast(error.message,true);
+    closeSheet();await loadRems();toast('Нагадування видалено');
+  };
+}
+$('#sheet').addEventListener('input',e=>{
+  if(!sheet||sheet.mode!=='rem')return;
+  const row=e.target.closest('.draft');if(!row)return;
+  const t=sheet.drafts[+row.dataset.i],c=e.target.classList;
+  if(c.contains('r-text'))t.text=e.target.value;
+  else if(c.contains('r-at'))t.at=e.target.value;
+  else if(c.contains('r-time'))t.time=e.target.value;
+  else if(c.contains('r-ivn'))t.ivn=e.target.value;
+  else if(c.contains('r-ivu'))t.ivu=e.target.value;
+  else if(c.contains('r-act'))t.active=e.target.checked;
+  else if(c.contains('r-kind')){t.kind=e.target.value;if(t.kind==='once'&&!t.at)t.at=blankRem().at;drawRem()}
+});
+$('#sheet').addEventListener('click',e=>{
+  if(!sheet||sheet.mode!=='rem')return;
+  const row=e.target.closest('.draft');if(!row)return;
+  const i=+row.dataset.i,t=sheet.drafts[i],chip=e.target.closest('.chip');
+  if(chip){const v=+chip.dataset.wd;t.weekdays=t.weekdays.includes(v)?t.weekdays.filter(x=>x!==v):[...t.weekdays,v];drawRem()}
+  else if(e.target.closest('.rm')){sheet.drafts.splice(i,1);if(!sheet.drafts.length)sheet.drafts.push(blankRem());drawRem()}
+});
+async function saveRems(){
+  if(!srvOn())return toast('Увійдіть в акаунт Supabase у налаштуваннях',true);
+  const rows=[];
+  for(const d of sheet.drafts){
+    if(!d.text.trim())return toast('Вкажіть, що нагадати',true);
+    const r=draftToRow(d);if(typeof r==='string')return toast(r,true);
+    rows.push(r);
+  }
+  const b=$('#remSave');b.disabled=true;
+  const {error}=await (sheet.editId?sb.from('reminders').update(rows[0]).eq('id',sheet.editId):sb.from('reminders').insert(rows));
+  if(error){b.disabled=false;return toast(error.message,true)}
+  const n=rows.length;closeSheet();await loadRems();toast(n>1?`Додано нагадувань: ${n}`:'Нагадування збережено');
+}
+function remPrompt(){
+  const n=new Date();
+  const wd=n.toLocaleDateString('uk-UA',{weekday:'long'});
+  return `Ти помічник для створення нагадувань. Зараз локальний час користувача: ${dtl(n)} (${wd}), часовий пояс ${TZ}.
+Із повідомлення витягни всі нагадування. Відповідай ЛИШЕ валідним JSON-масивом без пояснень, формат елемента:
+{"text":"що саме нагадати, коротко, мовою користувача","kind":"once" або "daily" або "weekly" або "interval","at":"YYYY-MM-DDTHH:mm" або null,"time":"HH:MM" або null,"weekdays":[числа 0-6, де 0 неділя, 1 понеділок],"interval_minutes":ціле число або null}
+Правила:
+- once: одноразове, at це конкретна дата й час у майбутньому ("завтра о 9" означає завтра 09:00, "через 2 години" означає поточний час плюс 2 години).
+- daily: щодня в один час, time це час.
+- weekly: у певні дні тижня, заповни weekdays і time.
+- interval: повторювати через рівні проміжки ("кожні 3 години", "кожні 30 хвилин"), interval_minutes це проміжок у хвилинах, at це час першого нагадування (якщо не сказано, то null).
+- Якщо для once час не вказано, візьми 09:00 найближчого можливого дня. Якщо нагадувань немає, поверни [].`;
+}
+function parseRems(text){
+  let j;
+  try{j=JSON.parse(text.replace(/^```(?:json)?|```$/g,'').trim())}catch(e){throw new Error('Не вдалося розібрати відповідь Gemini')}
+  if(!Array.isArray(j))j=j.items||j.reminders||[];
+  return j.map(it=>{
+    const kind=['once','daily','weekly','interval'].includes(it.kind)?it.kind:'once';
+    const m=String(it.time||'').match(/^(\d{1,2}):(\d{2})/);
+    const d={text:String(it.text||'').trim().slice(0,200),kind,
+      at:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(it.at||'')?it.at.slice(0,16):'',
+      time:m?pad(+m[1])+':'+m[2]:'09:00',
+      weekdays:[...new Set((Array.isArray(it.weekdays)?it.weekdays:[]).map(Number).filter(n=>n>=0&&n<=6))],
+      ivn:1,ivu:'h',active:true};
+    if(kind==='interval')Object.assign(d,splitIv(Math.round(+it.interval_minutes)||60));
+    if(kind==='once'&&!d.at){const t=new Date();t.setDate(t.getDate()+1);t.setHours(9,0,0,0);d.at=dtl(t)}
+    return d;
+  }).filter(d=>d.text);
+}
+async function runRemAI(parts,back){
+  if(needLogin())return;
+  const mine={mode:'busy',msg:'Gemini розуміє, що і коли нагадати…'};
+  stopStream();openSheet(mine);
+  try{
+    const items=parseRems(await gemini(parts,remPrompt()));
+    if(sheet!==mine)return;
+    if(!items.length){toast('Нічого не розпізнано. Спробуйте ще раз.',true);back?back():closeSheet();return}
+    openSheet({mode:'rem',title:'Перевірте нагадування',sub:'Gemini розпізнав нагадування. Перевірте час і збережіть.',drafts:items});
+  }catch(e){
+    if(sheet!==mine)return;
+    toast(e.message,true);back?back():closeSheet();
+  }
+}
+
 /* ---------- currencies ---------- */
 function fillCur(){
   const pop=['UAH','PLN','EUR','USD','GBP','CZK','CHF','CAD','SEK','NOK','DKK','HUF','RON','BGN','TRY','JPY','CNY','AUD'];
@@ -948,16 +1241,15 @@ $('#list').onclick=e=>{
 $('#aManual').onclick=()=>openSheet({mode:'review',title:'Нова операція',drafts:[blank()]});
 $('#aVoice').onclick=()=>{
   if(!cfg.key)toast('Додайте API ключ Gemini у налаштуваннях',true);
-  openSheet({mode:'voice'});
+  openSheet({mode:'voice',purpose:'tx'});
 };
 $('#aPhoto').onclick=()=>{
   if(!cfg.key)return toast('Додайте API ключ Gemini у налаштуваннях',true);
   openSheet({mode:'photos',imgs:[]});
 };
 
-fillCur();loadSettings();renderAll();
+fillCur();initSb();loadSettings();renderAll();
 store.set('sp.cfg',JSON.stringify(cfg));
-pull();
 </script>
 </body>
 </html>
