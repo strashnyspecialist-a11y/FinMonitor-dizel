@@ -292,12 +292,9 @@ h2:first-child{margin-top:0}
     </label>
     <label class="f"><span>Публічний ключ (anon / publishable)</span>
       <input type="password" id="sSbKey" autocomplete="off" placeholder="eyJ... або sb_publishable_...">
-      <div class="hint">Project Settings → API. Секретний ключ service_role сюди вставляти не можна.</div>
+      <div class="hint">Project Settings → API. Секретний ключ service_role сюди вставляти не можна. Ключ зберігається лише на цьому пристрої, нікому його не показуйте.</div>
     </label>
-    <label class="f"><span>Email</span><input type="email" id="sEmail" autocomplete="username" autocapitalize="off"></label>
-    <label class="f"><span>Пароль</span><input type="password" id="sPass" autocomplete="current-password"></label>
-    <div class="btns"><button class="btn main" id="sLogin">Увійти</button><button class="btn" id="sLogout">Вийти</button></div>
-    <p class="hint" id="sAuth" style="margin-bottom:0"></p>
+    <div class="btns"><button class="btn main" id="sConnect">Підключити й синхронізувати</button></div>
     <p class="hint" id="sStat" style="margin-bottom:6px"></p>
 
     <h2>Сповіщення в Telegram</h2>
@@ -373,34 +370,28 @@ function applyState(s){
   meta.updatedAt=+s.updatedAt||0;meta.dirty=false;saveMeta();
 }
 let sb=null,sbUser=null,sbSig='';
-function initSb(){
+function initSb(quiet){
   sb=null;sbUser=null;sbSig=cfg.sbUrl+'|'+cfg.sbKey;
-  if(!cfg.sbUrl||!cfg.sbKey||!window.supabase)return;
+  if(!cfg.sbUrl||!cfg.sbKey||!window.supabase){setSync('off');return}
   try{
-    sb=window.supabase.createClient(cfg.sbUrl,cfg.sbKey,{auth:{persistSession:true,autoRefreshToken:true}});
-    sb.auth.onAuthStateChange((ev,ses)=>{
-      const u=ses?.user||null,was=sbUser?.id;sbUser=u;
-      setTimeout(()=>{
-        if(u&&u.id!==was){pull();loadRems();tgStatus()}
-        if(!u){tgOk=null;setSync('off')}
-        loadSettings();renderRems();
-      },0);
-    });
-  }catch(e){sb=null}
+    sb=window.supabase.createClient(cfg.sbUrl,cfg.sbKey,{auth:{persistSession:false,autoRefreshToken:false}});
+    sbUser={id:'single'};
+    if(!quiet)setTimeout(()=>{pull();loadRems();tgStatus()},0);
+  }catch(e){sb=null;sbUser=null}
 }
 const ensureSb=()=>{if(!sb||sbSig!==cfg.sbUrl+'|'+cfg.sbKey)initSb();return !!sb};
 const srvOn=()=>!!(sb&&sbUser);
 async function srvGet(){
-  const {data,error}=await sb.from('app_state').select('data').maybeSingle();
+  const {data,error}=await sb.from('app_state').select('data').eq('id',1).maybeSingle();
   if(error)throw new Error(error.message);
   return data?data.data:{updatedAt:0};
 }
 async function srvPut(snap){
-  const {error}=await sb.from('app_state').upsert({user_id:sbUser.id,data:snap});
+  const {error}=await sb.from('app_state').upsert({id:1,data:snap});
   if(error)throw new Error(error.message);
 }
 let syncSt='off',syncMsg='',pushT=null,pushing=false;
-const offTxt=()=>!sb?'Supabase не підключено. Дані зберігаються лише в цьому браузері.':'Увійдіть в акаунт, щоб дані синхронізувалися.';
+const offTxt=()=>!sb?'Supabase не підключено. Дані зберігаються лише в цьому браузері.':'Підключення до хмари…';
 const SYNC_TXT={wait:'Синхронізація…',ok:'Синхронізовано з хмарою.'};
 function setSync(st,msg){
   syncSt=st;syncMsg=msg||'';
@@ -528,8 +519,6 @@ $('#sdot').onclick=async()=>{const ok=await pull();toast(ok?'Синхроніз�
 function loadSettings(){
   $('#sKey').value=cfg.key;$('#sModel').value=cfg.model;$('#sCur').value=cfg.cur;$('#sSplit').checked=cfg.split;
   $('#sSbUrl').value=cfg.sbUrl;$('#sSbKey').value=cfg.sbKey;
-  if(sbUser&&!$('#sEmail').value)$('#sEmail').value=sbUser.email||'';
-  $('#sAuth').textContent=sbUser?'Ви увійшли як '+sbUser.email+'.':sb?'Вхід не виконано.':'';
   renderTgStat();setSync(syncSt,syncMsg);
 }
 const readSb=()=>{
@@ -538,26 +527,19 @@ const readSb=()=>{
   cfg.sbUrl=u;cfg.sbKey=$('#sSbKey').value.trim();$('#sSbUrl').value=u;saveCfg();
 };
 $('#sSbUrl').onchange=$('#sSbKey').onchange=()=>{readSb();ensureSb();loadSettings()};
-$('#sLogin').onclick=async()=>{
+$('#sConnect').onclick=async()=>{
   readSb();
   if(!cfg.sbUrl||!cfg.sbKey)return toast('Вкажіть Project URL і публічний ключ',true);
-  if(!ensureSb())return toast('Не вдалося завантажити Supabase. Перевірте інтернет.',true);
-  const email=$('#sEmail').value.trim(),password=$('#sPass').value;
-  if(!email||!password)return toast('Введіть email і пароль',true);
-  const b=$('#sLogin');b.disabled=true;
-  const {error}=await sb.auth.signInWithPassword({email,password});
-  b.disabled=false;
-  if(error)return toast(error.message==='Invalid login credentials'?'Невірний email або пароль':error.message,true);
-  $('#sPass').value='';toast('Вхід виконано');
-};
-$('#sLogout').onclick=async()=>{
-  if(!sb||!sbUser)return toast('Ви не увійшли',true);
-  await sb.auth.signOut();toast('Ви вийшли');
+  initSb(true);
+  if(!sb)return toast('Не вдалося завантажити Supabase. Перевірте інтернет.',true);
+  const b=$('#sConnect');b.disabled=true;
+  const ok=await pull();await loadRems();await tgStatus();
+  b.disabled=false;toast(ok?'Підключено':syncMsg||'Помилка підключення',!ok);
 };
 let tgOk=null;
 function renderTgStat(){
   const e=$('#tgStat');if(!e)return;
-  e.textContent=!srvOn()?'Спочатку увійдіть в акаунт Supabase.':tgOk?'Telegram підключено. Токен збережено на сервері й тут не відображається.':'Telegram ще не налаштовано.';
+  e.textContent=!srvOn()?'Спочатку підключіть Supabase.':tgOk?'Telegram підключено. Токен збережено на сервері й тут не відображається.':'Telegram ще не налаштовано.';
 }
 async function tgStatus(){
   if(!srvOn()){tgOk=null;renderTgStat();return}
@@ -576,7 +558,7 @@ $('#tgFind').onclick=async()=>{
   }catch(e){toast(tgErr(e),true)}
 };
 $('#tgSave').onclick=async()=>{
-  if(!srvOn())return toast('Спочатку увійдіть в акаунт Supabase',true);
+  if(!srvOn())return toast('Спочатку підключіть Supabase',true);
   const t=$('#tgTok').value.trim(),c=$('#tgChat').value.trim();
   if(!t||!c)return toast('Вкажіть токен і chat ID',true);
   const b=$('#tgSave');b.disabled=true;
@@ -1083,7 +1065,7 @@ function remDesc(r){
 function renderRems(){
   const w=$('#remWarn'),l=$('#remList');if(!w||!l)return;
   w.innerHTML=!srvOn()
-    ?'<div class="card"><p class="oil-sub" style="margin:0">Нагадування зберігаються в Supabase. Підключіть його й увійдіть в акаунт у налаштуваннях.</p></div>'
+    ?'<div class="card"><p class="oil-sub" style="margin:0">Нагадування зберігаються в Supabase. Підключіть його в налаштуваннях.</p></div>'
     :tgOk===false?'<div class="card"><p class="oil-sub" style="margin:0 0 12px">Telegram не налаштовано, тому сповіщення не надходитимуть.</p><button class="btn" id="goSet" type="button">Відкрити налаштування</button></div>':'';
   if($('#goSet'))$('#goSet').onclick=()=>openPage('set');
   const items=rems.slice().sort((a,b)=>(b.active-a.active)||(a.active?a.next_at.localeCompare(b.next_at):b.next_at.localeCompare(a.next_at)));
@@ -1103,7 +1085,7 @@ $('#remList').onclick=e=>{
   const x=rems.find(v=>v.id===r.dataset.id);if(!x)return;
   openSheet({mode:'rem',title:'Редагувати нагадування',editId:x.id,drafts:[rowToDraft(x)]});
 };
-const needLogin=()=>{if(srvOn())return false;toast('Спочатку підключіть Supabase й увійдіть у налаштуваннях',true);return true};
+const needLogin=()=>{if(srvOn())return false;toast('Спочатку підключіть Supabase у налаштуваннях',true);return true};
 $('#remAdd').onclick=()=>{if(needLogin())return;openSheet({mode:'rem',title:'Нове нагадування',drafts:[blankRem()]})};
 $('#remVoice').onclick=$('#aRemVoice').onclick=()=>{
   if(needLogin())return;
@@ -1162,7 +1144,7 @@ $('#sheet').addEventListener('click',e=>{
   else if(e.target.closest('.rm')){sheet.drafts.splice(i,1);if(!sheet.drafts.length)sheet.drafts.push(blankRem());drawRem()}
 });
 async function saveRems(){
-  if(!srvOn())return toast('Увійдіть в акаунт Supabase у налаштуваннях',true);
+  if(!srvOn())return toast('Підключіть Supabase у налаштуваннях',true);
   const rows=[];
   for(const d of sheet.drafts){
     if(!d.text.trim())return toast('Вкажіть, що нагадати',true);
