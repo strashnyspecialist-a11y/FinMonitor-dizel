@@ -226,7 +226,7 @@ h2:first-child{margin-top:0}
   <header class="top"><div class="brand">Мої витрати<button class="sdot off" id="sdot" aria-label="Стан синхронізації з сервером"></button></div><div class="date" id="dateNow"></div></header>
 
   <section class="hero">
-    <div class="hero-top"><div class="payw" id="payw"></div><button class="remfab" id="aRemVoice" aria-label="Голосове нагадування"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Нагадування</span></button></div>
+    <div class="hero-top"><div class="payw" id="payw"></div><button class="remfab" id="aAI" aria-label="AI-асистент"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>AI</span></button></div>
     <small>Баланс</small>
     <div class="balance" id="bal">0,00</div>
     <div class="pair">
@@ -336,6 +336,8 @@ h2:first-child{margin-top:0}
       <div class="hint">За замовчуванням gemini-3.8-flash, найновіша стабільна Flash-модель. Можна обрати зі списку або впишіть будь-яку назву моделі Gemini.</div>
     </label>
     <label class="check"><input type="checkbox" id="sSplit"> Розбивати чек на окремі позиції</label>
+    <label class="check"><input type="checkbox" id="sConf"> Підтверджувати дії AI перед виконанням</label>
+    <p class="hint" style="margin:-8px 0 14px">Видалення підтверджується завжди.</p>
     <div class="btns"><button class="btn" id="sTest">Перевірити підключення</button></div>
 
     <h2>Загальні</h2>
@@ -373,7 +375,7 @@ const store={
 let tx=JSON.parse(store.get('sp.tx')||'[]');
 let fuel=JSON.parse(store.get('sp.fuel')||'[]');
 let trainerData=JSON.parse(store.get('sp.trainer')||'null');
-let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,oilLast:null,oilInt:10000,payDay:1,sbUrl:'',sbKey:''},JSON.parse(store.get('sp.cfg')||'{}'));
+let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,aiConfirm:true,oilLast:null,oilInt:10000,payDay:1,sbUrl:'',sbKey:''},JSON.parse(store.get('sp.cfg')||'{}'));
 /* застарілі моделі (2.x) вимкнено Google, переходимо на актуальну */
 if(/^gemini-2\./.test(cfg.model||'')||!cfg.model)cfg.model=DEF_MODEL;
 const meta=Object.assign({updatedAt:0,dirty:false},JSON.parse(store.get('sp.meta')||'{}'));
@@ -572,6 +574,7 @@ $('#sdot').onclick=async()=>{const ok=await pull();toast(ok?'Синхроніз�
 /* ---------- settings ---------- */
 function loadSettings(){
   $('#sKey').value=cfg.key;$('#sModel').value=cfg.model;$('#sCur').value=cfg.cur;$('#sSplit').checked=cfg.split;
+  $('#sConf').checked=cfg.aiConfirm!==false;
   $('#sPay').value=cfg.payDay||1;
   $('#sSbUrl').value=cfg.sbUrl;$('#sSbKey').value=cfg.sbKey;
   renderTgStat();setSync(syncSt,syncMsg);
@@ -631,6 +634,7 @@ $('#sModel').onchange=e=>{cfg.model=e.target.value.trim()||DEF_MODEL;e.target.va
 $('#sCur').onchange=e=>{cfg.cur=e.target.value;saveCfg(true);renderAll()};
 $('#sPay').onchange=e=>{let n=Math.round(+e.target.value);if(!(n>=1&&n<=31))n=1;cfg.payDay=n;e.target.value=n;saveCfg(true);renderAll();toast('Збережено')};
 $('#sSplit').onchange=e=>{cfg.split=e.target.checked;saveCfg()};
+$('#sConf').onchange=e=>{cfg.aiConfirm=e.target.checked;saveCfg()};
 $('#sTest').onclick=async()=>{
   cfg.key=$('#sKey').value.trim();cfg.model=$('#sModel').value.trim()||cfg.model;saveCfg();
   const b=$('#sTest');b.disabled=true;
@@ -710,19 +714,21 @@ function head(title){return `<div class="sh-h"><h3>${title}</h3><button class="x
 function renderSheet(){
   const el=$('#sheet');
   if(sheet.mode==='voice'){
-    const rem=sheet.purpose==='rem';
-    el.innerHTML=head(rem?'Голосове нагадування':'Голосовий ввід')+`
-      <p class="sub">${rem?'Натисніть і скажіть, що й коли нагадати, наприклад: «завтра о 9 ранку нагадай подзвонити лікарю» або «щодня о 8:30 пити вітаміни».':'Натисніть і розкажіть про витрати, наприклад: «вчора купив продукти на 540 гривень і заплатив 120 за таксі».'}</p>
+    const rem=sheet.purpose==='rem',ag=sheet.purpose==='agent';
+    el.innerHTML=head(ag?'AI-асистент':rem?'Голосове нагадування':'Голосовий ввід')+`
+      <p class="sub">${ag?'Натисніть і скажіть що завгодно: додати витрату, нагадування, їжу, вагу, тренування, заправку, змінити налаштування, спитати про баланс чи тренування.':rem?'Натисніть і скажіть, що й коли нагадати, наприклад: «завтра о 9 ранку нагадай подзвонити лікарю» або «щодня о 8:30 пити вітаміни».':'Натисніть і розкажіть про витрати, наприклад: «вчора купив продукти на 540 гривень і заплатив 120 за таксі».'}</p>
       <button class="mic" id="micBtn" aria-label="Почати запис">${MIC}</button>
       <p class="center sub" id="micSt">Готово до запису</p>
       <div class="or">або напишіть текстом</div>
-      <textarea id="txtIn" rows="3" placeholder="${rem?'Через 2 години забрати посилку':'Кава 85, обід 240, зарплата 30000'}"></textarea>
-      <div class="btns" style="margin-top:12px"><button class="btn" id="txtGo">Розпізнати текст</button></div>`;
+      <textarea id="txtIn" rows="3" placeholder="${ag?'Кава 85, нагадай завтра о 9 подзвонити, з’їв 2 яйця':rem?'Через 2 години забрати посилку':'Кава 85, обід 240, зарплата 30000'}"></textarea>
+      <div class="btns" style="margin-top:12px"><button class="btn" id="txtGo">${ag?'Виконати':'Розпізнати текст'}</button></div>`;
     $('#micBtn').onclick=toggleRec;
     $('#txtGo').onclick=()=>{
       const v=$('#txtIn').value.trim();if(!v)return toast('Введіть текст',true);
+      ag?runAgent([{text:v}],backVoice('agent')):
       rem?runRemAI([{text:v}],backVoice('rem')):runAI([{text:v}],'текстового повідомлення користувача',backVoice('tx'));
     };
+  }else if(sheet.mode==='agent'){drawAgent();return;
   }else if(sheet.mode==='busy'){
     el.innerHTML=`<div class="center"><div class="spin"></div><p>${esc(sheet.msg)}</p></div>`;
     return;
@@ -828,7 +834,9 @@ async function toggleRec(){
     try{
       const wav=await toWav(blob);
       const audio={inline_data:{mime_type:'audio/wav',data:b64(wav)}};
-      if(purpose==='rem')await runRemAI([audio,{text:'Розпізнай нагадування з цього голосового повідомлення.'}],backVoice('rem'));
+      const audio2={text:'Виконай команду з цього голосового повідомлення.'};
+      if(purpose==='agent')await runAgent([audio,audio2],backVoice('agent'));
+      else if(purpose==='rem')await runRemAI([audio,{text:'Розпізнай нагадування з цього голосового повідомлення.'}],backVoice('rem'));
       else await runAI([audio,{text:'Розпізнай витрати та доходи з цього голосового повідомлення.'}],'голосового повідомлення користувача',backVoice('tx'));
     }catch(e){toast('Не вдалося обробити запис',true);openSheet({mode:'voice',purpose})}
   };
@@ -1143,7 +1151,7 @@ $('#remList').onclick=e=>{
 };
 const needLogin=()=>{if(srvOn())return false;toast('Спочатку підключіть Supabase у налаштуваннях',true);return true};
 $('#remAdd').onclick=()=>{if(needLogin())return;openSheet({mode:'rem',title:'Нове нагадування',drafts:[blankRem()]})};
-$('#remVoice').onclick=$('#aRemVoice').onclick=()=>{
+$('#remVoice').onclick=()=>{
   if(needLogin())return;
   if(!cfg.key)toast('Додайте API ключ Gemini у налаштуваннях',true);
   openSheet({mode:'voice',purpose:'rem'});
@@ -1279,6 +1287,255 @@ window.addEventListener('message',e=>{
   }
 });
 
+/* ---------- AI-агент: керування всім додатком ---------- */
+const trBase=()=>({profile:{},workouts:[],weights:[],meals:[],nutrition:null,plans:[],chat:[]});
+function trData(){
+  if(!trainerData)trainerData=trBase();
+  ['workouts','weights','meals','plans','chat'].forEach(k=>{if(!Array.isArray(trainerData[k]))trainerData[k]=[]});
+  if(!trainerData.profile)trainerData.profile={};
+  return trainerData;
+}
+function trSave(){store.set('sp.trainer',JSON.stringify(trainerData));touch();trainSend('refresh')}
+function trDay(){
+  const p=trData().profile,mode=p.shiftMode==='day'?'day':'night';
+  const st=((p[mode]||{}).start)||(mode==='night'?'15:00':'07:00');
+  const [h,m]=st.split(':').map(Number),n=new Date();
+  const back=(n.getHours()*60+n.getMinutes())<(h*60+m)?1:0;
+  return dstr(new Date(n.getFullYear(),n.getMonth(),n.getDate()-back));
+}
+const isoD=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'');
+function summary(p){
+  const rg=p==='m1'?monthRange(1):p==='all'?null:monthRange(0);
+  const set=tx.filter(t=>!rg||(t.date>=rg.from&&t.date<rg.to));
+  const income=set.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp=set.filter(t=>t.type==='expense'),expense=exp.reduce((a,t)=>a+t.amount,0);
+  const by={};exp.forEach(t=>by[t.category]=Math.round(((by[t.category]||0)+t.amount)*100)/100);
+  const all=tx.reduce((a,t)=>a+(t.type==='income'?t.amount:-t.amount),0);
+  return {period:rg?`${rg.from} — ${rg.to} (не включно)`:'весь час',currency:cfg.cur,income,expense,period_balance:income-expense,expenses_by_category:by,total_balance:all};
+}
+const txItemSch={type:'object',properties:{
+  type:{type:'string',enum:['expense','income']},
+  amount:{type:'number',description:'сума більше нуля'},
+  category:{type:'string',enum:CATS},
+  note:{type:'string',description:'короткий опис'},
+  date:{type:'string',description:'YYYY-MM-DD; якщо не вказана — не передавати'}},
+  required:['type','amount','category']};
+const remItemSch={type:'object',properties:{
+  text:{type:'string',description:'що нагадати'},
+  kind:{type:'string',enum:['once','daily','weekly','interval']},
+  at:{type:'string',description:'YYYY-MM-DDTHH:mm локальний час (для once, або перший раз для interval)'},
+  time:{type:'string',description:'HH:MM (для daily і weekly)'},
+  weekdays:{type:'array',items:{type:'integer'},description:'0=неділя, 1=понеділок… (для weekly)'},
+  interval_minutes:{type:'integer',description:'для interval'}},
+  required:['text','kind']};
+const STR={type:'string'},NUM={type:'number'};
+const WORK_EX=['pushups','pullups','dips','squats','abs','shadow','run'];
+const AI_TOOLS=[
+ {name:'list_transactions',description:'Знайти витрати й доходи (повертає id). Використовуй перед зміною чи видаленням і для питань про конкретні покупки.',
+  parameters:{type:'object',properties:{search:{type:'string',description:'текст з опису або категорії'},from:{type:'string',description:'YYYY-MM-DD'},to:{type:'string',description:'YYYY-MM-DD включно'},limit:{type:'integer'}}},
+  run(a){
+    const q=(a.search||'').toLowerCase();
+    return tx.filter(t=>(!q||(t.note+' '+t.category).toLowerCase().includes(q))&&(!a.from||t.date>=a.from)&&(!a.to||t.date<=a.to))
+      .sort((x,y)=>y.date.localeCompare(x.date)).slice(0,Math.min(+a.limit||20,50))
+      .map(t=>({id:t.id,date:t.date,type:t.type,amount:t.amount,category:t.category,note:t.note}));
+  }},
+ {name:'get_summary',description:'Підсумок доходів, витрат, балансу й витрат за категоріями за період (розрахунковий місяць від дня зарплати).',
+  parameters:{type:'object',properties:{period:{type:'string',enum:['m0','m1','all'],description:'m0 цей місяць, m1 минулий, all весь час'}},required:['period']},
+  run:a=>summary(a.period)},
+ {name:'add_transactions',write:true,description:'Додати одну або кілька витрат чи доходів.',
+  parameters:{type:'object',properties:{items:{type:'array',items:txItemSch}},required:['items']},
+  run(a){const it=parseItems(JSON.stringify(a.items||[]));if(!it.length)throw new Error('Немає коректних операцій');tx.push(...it);saveTx();renderAll();return {added:it.length}},
+  desc:a=>'Додати: '+(a.items||[]).map(i=>`${i.type==='income'?'+':'−'}${i.amount} ${i.note||i.category}`).join('; ')},
+ {name:'update_transaction',write:true,description:'Змінити існуючу операцію за id (передай лише поля, які змінюються).',
+  parameters:{type:'object',properties:{id:STR,type:{type:'string',enum:['expense','income']},amount:NUM,category:{type:'string',enum:CATS},note:STR,date:STR},required:['id']},
+  run(a){
+    const t=tx.find(x=>x.id===a.id);if(!t)throw new Error('Операцію не знайдено');
+    const n=parseItems(JSON.stringify([{type:a.type||t.type,amount:a.amount||t.amount,category:a.category||t.category,note:a.note??t.note,date:a.date||t.date}]))[0];
+    if(!n)throw new Error('Некоректні дані');Object.assign(t,n,{id:t.id});saveTx();renderAll();return {ok:true};
+  },
+  desc:a=>{const t=tx.find(x=>x.id===a.id);return 'Змінити операцію «'+(t?t.note||t.category:a.id)+'»'}},
+ {name:'delete_transaction',write:true,destructive:true,description:'Видалити операцію за id.',
+  parameters:{type:'object',properties:{id:STR},required:['id']},
+  run(a){if(!tx.some(x=>x.id===a.id))throw new Error('Операцію не знайдено');tx=tx.filter(x=>x.id!==a.id);saveTx();renderAll();return {ok:true}},
+  desc:a=>{const t=tx.find(x=>x.id===a.id);return t?`Видалити: ${t.date} ${t.note||t.category} (${t.amount})`:'Видалити операцію'}},
+ {name:'list_reminders',description:'Показати список нагадувань (з id).',
+  async run(){if(!srvOn())throw new Error('Supabase не підключено');await loadRems();return rems.map(r=>({id:r.id,text:r.text,kind:r.kind,next_at:r.next_at,active:r.active}))}},
+ {name:'add_reminders',write:true,description:'Створити одне або кілька нагадувань.',
+  parameters:{type:'object',properties:{items:{type:'array',items:remItemSch}},required:['items']},
+  async run(a){
+    if(!srvOn())throw new Error('Supabase не підключено');
+    const ds=parseRems(JSON.stringify(a.items||[]));if(!ds.length)throw new Error('Немає коректних нагадувань');
+    const rows=[];for(const d of ds){const r=draftToRow(d);if(typeof r==='string')throw new Error(r);rows.push(r)}
+    const {error}=await sb.from('reminders').insert(rows);if(error)throw new Error(error.message);
+    await loadRems();return {added:rows.length};
+  },
+  desc:a=>'Нагадування: '+(a.items||[]).map(i=>`«${i.text}» (${i.at?i.at.replace('T',' '):i.time||'кожні '+i.interval_minutes+' хв'})`).join('; ')},
+ {name:'delete_reminder',write:true,destructive:true,description:'Видалити нагадування за id.',
+  parameters:{type:'object',properties:{id:STR},required:['id']},
+  async run(a){if(!srvOn())throw new Error('Supabase не підключено');const {error}=await sb.from('reminders').delete().eq('id',a.id);if(error)throw new Error(error.message);await loadRems();return {ok:true}},
+  desc:a=>{const r=rems.find(x=>x.id===a.id);return 'Видалити нагадування'+(r?` «${r.text}»`:'')}},
+ {name:'add_meals',write:true,description:'Записати прийом їжі в щоденник калорій. Оціни калорії й БЖВ самостійно.',
+  parameters:{type:'object',properties:{date:{type:'string',description:'YYYY-MM-DD, зазвичай не передавати'},items:{type:'array',items:{type:'object',properties:{name:STR,amount:{type:'string',description:'порція, напр. 150 г'},kcal:NUM,protein:NUM,fat:NUM,carbs:NUM},required:['name','kcal']}}},required:['items']},
+  run(a){
+    const d=trData(),day=isoD(a.date)?a.date:trDay(),n=new Date(),time=pad(n.getHours())+':'+pad(n.getMinutes());
+    const items=(a.items||[]).filter(i=>fnum(i.kcal)>0);if(!items.length)throw new Error('Вкажіть калорії');
+    items.forEach((i,k)=>d.meals.push({id:Date.now()+k,date:day,time,name:String(i.name||'Страва'),amount:i.amount||'',kcal:Math.round(fnum(i.kcal)),p:Math.round(fnum(i.protein)),f:Math.round(fnum(i.fat)),c:Math.round(fnum(i.carbs))}));
+    trSave();return {added:items.length};
+  },
+  desc:a=>'Їжа: '+(a.items||[]).map(i=>`${i.name} (~${Math.round(i.kcal)} ккал)`).join(', ')},
+ {name:'add_weight',write:true,description:'Записати вагу тіла в кг.',
+  parameters:{type:'object',properties:{kg:NUM,date:STR},required:['kg']},
+  run(a){
+    const kg=fnum(a.kg);if(!(kg>20&&kg<400))throw new Error('Некоректна вага');
+    const d=trData(),date=isoD(a.date)?a.date:trDay(),ex=d.weights.find(w=>w.date===date);
+    if(ex)ex.kg=kg;else d.weights.push({id:Date.now(),date,kg});trSave();return {ok:true};
+  },
+  desc:a=>`Вага: ${a.kg} кг`},
+ {name:'add_workout',write:true,description:'Записати тренування. Для віджимань, турніка, брусів, присідань, преса: sets і reps (якщо сказано просто «50 віджимань», то sets=1, reps=50). Для shadow: minutes. Для run: km і minutes.',
+  parameters:{type:'object',properties:{exercise:{type:'string',enum:WORK_EX},sets:NUM,reps:NUM,minutes:NUM,km:NUM,rpe:{type:'integer',description:'1 легко, 2 нормально, 3 важко'},note:STR,date:STR},required:['exercise']},
+  run(a){
+    if(!WORK_EX.includes(a.exercise))throw new Error('Невідома вправа');
+    const d=trData(),e={id:Date.now(),date:isoD(a.date)?a.date:trDay(),ex:a.exercise,rpe:[1,2,3].includes(+a.rpe)?+a.rpe:2,note:String(a.note||'')};
+    if(['pushups','pullups','dips','squats','abs'].includes(a.exercise)){e.sets=Math.round(fnum(a.sets))||1;e.reps=Math.round(fnum(a.reps));if(!(e.reps>0))throw new Error('Вкажіть повторення')}
+    else if(a.exercise==='shadow'){e.minutes=fnum(a.minutes);if(!(e.minutes>0))throw new Error('Вкажіть хвилини')}
+    else{e.km=fnum(a.km);e.minutes=fnum(a.minutes);if(!(e.km>0&&e.minutes>0))throw new Error('Вкажіть дистанцію й час')}
+    d.workouts.push(e);trSave();return {ok:true};
+  },
+  desc:a=>'Тренування: '+a.exercise+' '+[a.sets&&a.reps?a.sets+'×'+a.reps:a.reps,a.km&&a.km+' км',a.minutes&&a.minutes+' хв'].filter(Boolean).join(' ')},
+ {name:'get_trainer_data',description:'Дані для тренера й нутриціолога: профіль, вага, тренування, сьогоднішня їжа та ціль калорій. Викликай перед порадами чи аналізом прогресу.',
+  run(){
+    const d=trData(),p=d.profile,day=trDay(),by=(x,y)=>x.date.localeCompare(y.date);
+    const meals=d.meals.filter(m=>m.date===day);
+    return {profile:{age:p.age,sex:p.sex,height_cm:p.height,activity:p.activity,notes:p.notes},calorie_goal:d.nutrition||null,
+      today_total:meals.reduce((a,m)=>({kcal:a.kcal+m.kcal,p:a.p+(m.p||0),f:a.f+(m.f||0),c:a.c+(m.c||0)}),{kcal:0,p:0,f:0,c:0}),
+      today_meals:meals.map(m=>({name:m.name,kcal:m.kcal})),
+      weights_last30:d.weights.slice().sort(by).slice(-30).map(w=>({date:w.date,kg:w.kg})),
+      workouts_last40:d.workouts.slice().sort(by).slice(-40).map(({date,ex,sets,reps,minutes,km,rpe,note})=>({date,ex,sets,reps,minutes,km,rpe,note}))};
+  }},
+ {name:'add_fuel',write:true,description:'Додати заправку.',
+  parameters:{type:'object',properties:{date:STR,odometer:{type:'integer',description:'загальний пробіг, км'},liters:NUM,total:{type:'number',description:'сума'},price_per_liter:NUM},required:['odometer','liters']},
+  run(a){
+    const odo=Math.round(fnum(a.odometer)),L=fnum(a.liters),P=fnum(a.price_per_liter);let T=fnum(a.total);if(!T&&P)T=L*P;
+    if(!odo||!L||!T)throw new Error('Потрібні пробіг, літри й сума');
+    if(fuel.some(x=>x.odo===odo))throw new Error('Заправка з таким пробігом уже є');
+    fuel.push({id:uid(),date:isoD(a.date)?a.date:today(),odo,liters:rnd(L,2),total:rnd(T,2),price:rnd(T/L,3)});saveFuel();renderAll();return {ok:true};
+  },
+  desc:a=>`Заправка: ${a.liters} л, пробіг ${a.odometer} км`},
+ {name:'mark_oil_changed',write:true,description:'Записати заміну мастила. Якщо пробіг не вказано, береться пробіг останньої заправки.',
+  parameters:{type:'object',properties:{odometer:{type:'integer'}}},
+  run(a){
+    const cur=fuelCalc();const o=Math.round(fnum(a.odometer))||(cur.length?cur[cur.length-1].odo:0);
+    if(!o)throw new Error('Невідомий пробіг');cfg.oilLast=o;saveCfg(true);renderAll();return {ok:true};
+  },
+  desc:a=>'Заміна мастила'+(a.odometer?` на ${a.odometer} км`:'')},
+ {name:'set_settings',write:true,description:'Змінити валюту (код ISO, напр. UAH, USD) та/або день початку місяця (день зарплати, 1–31).',
+  parameters:{type:'object',properties:{currency:STR,pay_day:{type:'integer'}}},
+  run(a){
+    if(a.currency){const c=String(a.currency).toUpperCase();try{new Intl.NumberFormat('uk-UA',{style:'currency',currency:c})}catch(e){throw new Error('Невідома валюта')}cfg.cur=c;$('#sCur').value=c}
+    if(a.pay_day){const n=Math.round(+a.pay_day);if(!(n>=1&&n<=31))throw new Error('День має бути від 1 до 31');cfg.payDay=n;$('#sPay').value=n}
+    saveCfg(true);renderAll();return {ok:true};
+  },
+  desc:a=>'Налаштування: '+[a.currency&&'валюта '+a.currency,a.pay_day&&'день зарплати '+a.pay_day].filter(Boolean).join(', ')},
+ {name:'open_page',description:'Відкрити розділ додатка.',
+  parameters:{type:'object',properties:{page:{type:'string',enum:['list','stats','fuel','train','rem','set']}},required:['page']},
+  run(a,ctx){ctx.nav=a.page;return {ok:true}}}
+];
+function agentPrompt(){
+  const n=new Date();
+  return `Ти голосовий AI-асистент застосунку для обліку витрат, нагадувань, пального, харчування, ваги й тренувань одного користувача. Відповідай українською, дуже коротко.
+Зараз: ${dtl(n)} (${n.toLocaleDateString('uk-UA',{weekday:'long'})}), часовий пояс ${TZ}. Сьогодні ${today()}. Валюта: ${cfg.cur}. Supabase (потрібен для нагадувань): ${srvOn()?'підключено':'НЕ підключено'}. Поточна доба харчування: ${trDay()}.
+Правила:
+- Кожну дію виконуй через виклик функцій. В одному повідомленні може бути кілька дій, викликай усі потрібні.
+- Не вигадуй id: щоб змінити чи видалити запис, спершу знайди його через list_transactions або list_reminders.
+- На питання про цифри використовуй get_summary або list_transactions. На питання про тренування, вагу й харчування спершу виклич get_trainer_data і відповідай як досвідчений тренер і нутриціолог. Загальні питання відповідай текстом без функцій.
+- Відносні дати («вчора», «в понеділок») переводь у YYYY-MM-DD. Якщо дата не вказана, не передавай її.
+- Дії запису ставляться в чергу й виконуються після підтвердження, тому не стверджуй, що вже зроблено. Коротко опиши, що саме буде зроблено.
+- Категорії лише зі списку: ${CATS.join(', ')}.`;
+}
+async function geminiTools(contents,system,tools){
+  if(!cfg.key)throw new Error('Спочатку додайте API ключ у налаштуваннях');
+  let r;
+  try{
+    r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent`,{
+      method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':cfg.key},
+      body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents,tools})
+    });
+  }catch(e){throw new Error('Немає зв’язку з Gemini. Перевірте інтернет.')}
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.error?.message?('Gemini: '+data.error.message):'Помилка Gemini '+r.status);
+  const c=data.candidates?.[0];
+  if(!c||!c.content)throw new Error('Gemini не повернув відповіді. Спробуйте ще раз.');
+  return c;
+}
+async function runAgent(parts,back){
+  const mine={mode:'busy',msg:'AI думає…'};stopStream();openSheet(mine);
+  const ctx={nav:null},pending=[],contents=[{role:'user',parts}];
+  const tools=[{functionDeclarations:AI_TOOLS.map(t=>{const d={name:t.name,description:t.description};if(t.parameters)d.parameters=t.parameters;return d})}];
+  let reply='';
+  try{
+    for(let round=0;round<6;round++){
+      const cand=await geminiTools(contents,agentPrompt(),tools);
+      if(sheet!==mine)return;
+      const ps=cand.content.parts||[],calls=ps.filter(p=>p.functionCall);
+      reply=ps.filter(p=>p.text&&!p.thought).map(p=>p.text).join('').trim()||reply;
+      if(!calls.length)break;
+      contents.push({role:'model',parts:ps});
+      const resp=[];
+      for(const p of calls){
+        const {name,args={}}=p.functionCall,t=AI_TOOLS.find(x=>x.name===name);let out;
+        if(!t)out={error:'Невідома функція'};
+        else if(t.write){pending.push({t,args});out={status:'queued',note:'Буде виконано після підтвердження користувача'}}
+        else{try{out=await t.run(args,ctx)}catch(e){out={error:e.message}}}
+        resp.push({functionResponse:{name,response:{result:out}}});
+      }
+      contents.push({role:'user',parts:resp});
+    }
+    if(sheet!==mine)return;
+    if(!pending.length){
+      if(ctx.nav&&!reply){closeSheet();openPage(ctx.nav);return}
+      return openSheet({mode:'agent',reply:reply||'Готово.',results:[],ctx});
+    }
+    const need=pending.some(p=>p.t.destructive)||cfg.aiConfirm!==false;
+    if(need)openSheet({mode:'agent',reply,pending,ctx});
+    else await execPending(pending,reply,ctx);
+  }catch(e){
+    if(sheet!==mine)return;
+    toast(e.message,true);back?back():closeSheet();
+  }
+}
+async function execPending(pending,reply,ctx){
+  const mine={mode:'busy',msg:'Виконую…'};openSheet(mine);
+  const results=[];
+  for(const p of pending){
+    try{await p.t.run(p.args,ctx);results.push('✓ '+p.t.desc(p.args))}
+    catch(e){results.push('✗ '+p.t.desc(p.args)+': '+e.message)}
+  }
+  if(sheet!==mine)return;
+  openSheet({mode:'agent',reply,results,ctx});
+}
+function drawAgent(){
+  const s=sheet;
+  const rep=s.reply?`<p style="white-space:pre-wrap;margin:0 0 14px">${esc(s.reply)}</p>`:'';
+  let body;
+  if(s.pending){
+    body=`<p class="sub">Я виконаю такі дії:</p>`+s.pending.map(p=>`<div class="draft"><b>${esc(p.t.desc(p.args))}</b>${p.t.destructive?'<div class="cat" style="color:var(--r)">Незворотна дія</div>':''}</div>`).join('')+
+      `<div class="btns"><button class="btn main" id="agOk" type="button">Підтвердити</button><button class="btn ghost" id="agNo" type="button">Скасувати</button></div>`;
+  }else{
+    body=(s.results||[]).map(r=>`<div class="cat" style="margin-bottom:6px;color:${r[0]==='✗'?'var(--r)':'var(--g)'}">${esc(r)}</div>`).join('')+
+      `<div class="btns" style="margin-top:12px"><button class="btn main" id="agMore" type="button">Ще команда</button>${s.ctx&&s.ctx.nav?'<button class="btn" id="agNav" type="button">Відкрити розділ</button>':''}<button class="btn ghost" id="agClose" type="button">Закрити</button></div>`;
+  }
+  $('#sheet').innerHTML=head('AI')+rep+body;
+  $('#shX').onclick=closeSheet;
+  if(s.pending){
+    $('#agOk').onclick=()=>execPending(s.pending,s.reply,s.ctx);
+    $('#agNo').onclick=()=>{closeSheet();toast('Скасовано')};
+  }else{
+    $('#agMore').onclick=()=>openSheet({mode:'voice',purpose:'agent'});
+    $('#agClose').onclick=closeSheet;
+    if($('#agNav'))$('#agNav').onclick=()=>{const n=s.ctx.nav;closeSheet();openPage(n)};
+  }
+}
+
 /* ---------- currencies ---------- */
 function fillCur(){
   const pop=['UAH','PLN','EUR','USD','GBP','CZK','CHF','CAD','SEK','NOK','DKK','HUF','RON','BGN','TRY','JPY','CNY','AUD'];
@@ -1306,6 +1563,10 @@ $('#aVoice').onclick=()=>{
 $('#aPhoto').onclick=()=>{
   if(!cfg.key)return toast('Додайте API ключ Gemini у налаштуваннях',true);
   openSheet({mode:'photos',imgs:[]});
+};
+$('#aAI').onclick=()=>{
+  if(!cfg.key)toast('Додайте API ключ Gemini у налаштуваннях',true);
+  openSheet({mode:'voice',purpose:'agent'});
 };
 
 fillCur();initSb();loadSettings();renderAll();
