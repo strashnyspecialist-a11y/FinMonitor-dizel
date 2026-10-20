@@ -43,15 +43,22 @@ svg{display:block}
 .sdot.wait{background:var(--warn)}
 .sdot.err{background:var(--r)}
 .hero{flex:1;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:6px}
-.hero-top{flex:1;display:flex;justify-content:flex-end;align-items:flex-start;padding-top:4px}
+.hero-top{flex:1;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-top:4px}
 .remfab{
-  width:112px;height:112px;border-radius:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  flex:none;width:112px;height:112px;border-radius:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
   background:rgba(140,125,255,.14);border:1.5px solid var(--acc);color:var(--acc);box-shadow:0 0 30px rgba(140,125,255,.25);
   font-weight:700;font-size:12px;transition:transform .1s,background .15s;
 }
 .remfab:hover{background:rgba(140,125,255,.22)}
 .remfab:active{transform:scale(.96)}
 .remfab svg{width:44px;height:44px}
+/* віджет «до зарплати» */
+.payw{flex:1;min-width:0;height:112px;border-radius:24px;padding:14px 16px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between}
+.payw small{font-size:12px;color:var(--mut);font-weight:700}
+.payw .pd{font-size:34px;font-weight:800;line-height:1;color:var(--g);text-shadow:var(--glow-g);white-space:nowrap}
+.payw .pd span{font-size:14px;color:var(--mut);font-weight:700;margin-left:6px;text-shadow:none}
+.payw .pd.now{font-size:20px}
+.payw .track{height:6px}
 .hero small{font-size:13px;color:var(--mut);font-weight:600}
 .balance{
   font-weight:800;font-size:clamp(36px,12.5vw,60px);line-height:1.05;letter-spacing:-.035em;white-space:nowrap;
@@ -87,6 +94,7 @@ svg{display:block}
 .navb.wide svg:last-child{margin-left:auto}
 @media(max-height:700px){
   .app{gap:10px}.hero{min-height:110px}.remfab{width:84px;height:84px;border-radius:24px;gap:4px;font-size:11px}.remfab svg{width:32px;height:32px}.act{min-height:76px;padding:10px 4px}.ico{width:32px;height:32px}.navb{padding:11px 12px}.navb.wide{padding:13px 12px}.pair{margin-top:6px}
+  .payw{height:84px;padding:10px 12px}.payw .pd{font-size:26px}
 }
 
 /* pages */
@@ -218,7 +226,7 @@ h2:first-child{margin-top:0}
   <header class="top"><div class="brand">Мої витрати<button class="sdot off" id="sdot" aria-label="Стан синхронізації з сервером"></button></div><div class="date" id="dateNow"></div></header>
 
   <section class="hero">
-    <div class="hero-top"><button class="remfab" id="aRemVoice" aria-label="Голосове нагадування"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Нагадування</span></button></div>
+    <div class="hero-top"><div class="payw" id="payw"></div><button class="remfab" id="aRemVoice" aria-label="Голосове нагадування"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Нагадування</span></button></div>
     <small>Баланс</small>
     <div class="balance" id="bal">0,00</div>
     <div class="pair">
@@ -331,6 +339,10 @@ h2:first-child{margin-top:0}
     <div class="btns"><button class="btn" id="sTest">Перевірити підключення</button></div>
 
     <h2>Загальні</h2>
+    <label class="f"><span>День початку місяця (день зарплати)</span>
+      <input id="sPay" type="number" inputmode="numeric" min="1" max="31" placeholder="1">
+      <div class="hint">Від цього числа рахуються доходи, витрати й статистика «за місяць». Якщо в місяці менше днів, береться його останній день.</div>
+    </label>
     <label class="f"><span>Валюта</span>
       <select id="sCur"></select>
       <div class="hint">Усі суми в додатку відображатимуться в обраній валюті.</div>
@@ -361,7 +373,7 @@ const store={
 let tx=JSON.parse(store.get('sp.tx')||'[]');
 let fuel=JSON.parse(store.get('sp.fuel')||'[]');
 let trainerData=JSON.parse(store.get('sp.trainer')||'null');
-let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,oilLast:null,oilInt:10000,sbUrl:'',sbKey:''},JSON.parse(store.get('sp.cfg')||'{}'));
+let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,oilLast:null,oilInt:10000,payDay:1,sbUrl:'',sbKey:''},JSON.parse(store.get('sp.cfg')||'{}'));
 /* застарілі моделі (2.x) вимкнено Google, переходимо на актуальну */
 if(/^gemini-2\./.test(cfg.model||'')||!cfg.model)cfg.model=DEF_MODEL;
 const meta=Object.assign({updatedAt:0,dirty:false},JSON.parse(store.get('sp.meta')||'{}'));
@@ -372,12 +384,13 @@ const saveFuel=()=>{store.set('sp.fuel',JSON.stringify(fuel));touch()};
 const saveCfg=shared=>{store.set('sp.cfg',JSON.stringify(cfg));if(shared)touch()};
 
 /* ---------- sync із сервером ---------- */
-const snapshot=()=>({v:1,updatedAt:meta.updatedAt,tx,fuel,settings:{cur:cfg.cur,oilLast:cfg.oilLast,oilInt:cfg.oilInt},trainer:trainerData});
+const snapshot=()=>({v:1,updatedAt:meta.updatedAt,tx,fuel,settings:{cur:cfg.cur,oilLast:cfg.oilLast,oilInt:cfg.oilInt,payDay:cfg.payDay},trainer:trainerData});
 function applyState(s){
   tx=Array.isArray(s.tx)?s.tx:[];fuel=Array.isArray(s.fuel)?s.fuel:[];
   const st=s.settings||{};
   if(st.cur)cfg.cur=st.cur;
   cfg.oilLast=st.oilLast??null;cfg.oilInt=st.oilInt||10000;
+  cfg.payDay=st.payDay||1;
   store.set('sp.tx',JSON.stringify(tx));store.set('sp.fuel',JSON.stringify(fuel));store.set('sp.cfg',JSON.stringify(cfg));
   if(s.trainer){trainerData=s.trainer;store.set('sp.trainer',JSON.stringify(trainerData))}
   meta.updatedAt=+s.updatedAt||0;meta.dirty=false;saveMeta();
@@ -459,6 +472,29 @@ function toast(msg,err){
 }
 const b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
 
+/* ---------- розрахунковий місяць (від дня зарплати) ---------- */
+function monthRange(back=0){
+  const n=new Date(),d=cfg.payDay||1,y=n.getFullYear();
+  const m=n.getMonth()-(n.getDate()<d?1:0)-back;
+  const cd=mm=>{const f=new Date(y,mm,1),Y=f.getFullYear(),M=f.getMonth();
+    return new Date(Y,M,Math.min(d,new Date(Y,M+1,0).getDate()))};
+  return {from:dstr(cd(m)),to:dstr(cd(m+1))}; // to не входить у період
+}
+const plDays=n=>{const a=n%10,b=n%100;return a===1&&b!==11?'день':(a>=2&&a<=4&&(b<12||b>14))?'дні':'днів'};
+function renderPay(){
+  const el=$('#payw');if(!el)return;
+  const r=monthRange(0),t=today();
+  const dn=s=>new Date(s+'T00:00:00').getTime()/864e5;
+  const left=Math.round(dn(r.to)-dn(t)),total=Math.round(dn(r.to)-dn(r.from));
+  const pct=Math.min(100,Math.max(0,(total-left)/total*100));
+  const nd=new Date(r.to+'T12:00:00').toLocaleDateString('uk-UA',{day:'numeric',month:'long'});
+  const pay=t===r.from&&(cfg.payDay||1)>1;
+  el.innerHTML=`<small>${pay?'Сьогодні':'До зарплати'}</small>
+    <div class="pd ${pay?'now':''}">${pay?'День зарплати 🎉':`${left}<span>${plDays(left)}</span>`}</div>
+    <div><div class="track"><div class="fill ok" style="width:${Math.max(3,pct)}%"></div></div>
+    <small style="display:block;margin-top:5px;font-weight:600;color:var(--faint)">${esc(nd)}</small></div>`;
+}
+
 /* ---------- rendering ---------- */
 function fitBal(){
   const el=$('#bal');if(!el)return;el.style.fontSize='';
@@ -466,15 +502,19 @@ function fitBal(){
   while(el.scrollWidth>el.clientWidth&&fs>20){fs-=2;el.style.fontSize=fs+'px'}
 }
 function renderHero(){
-  let inc=0,out=0,mi=0,mo=0;const m=today().slice(0,7);
+  let inc=0,out=0,mi=0,mo=0;const r=monthRange(0);
   tx.forEach(t=>{
-    if(t.type==='income'){inc+=t.amount;if(t.date.startsWith(m))mi+=t.amount}
-    else{out+=t.amount;if(t.date.startsWith(m))mo+=t.amount}
+    const inM=t.date>=r.from&&t.date<r.to;
+    if(t.type==='income'){inc+=t.amount;if(inM)mi+=t.amount}
+    else{out+=t.amount;if(inM)mo+=t.amount}
   });
   const bal=inc-out;
   const el=$('#bal');el.textContent=money(bal);el.classList.toggle('neg',bal<0);el.classList.toggle('pos',bal>0);fitBal();
-  $('#dateNow').textContent=new Date().toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
+  const fm=s=>new Date(s+'T12:00:00').toLocaleDateString('uk-UA',{day:'numeric',month:'short'});
+  const last=new Date(r.to+'T12:00:00');last.setDate(last.getDate()-1);
+  $('#dateNow').textContent=(cfg.payDay||1)>1?fm(r.from)+' – '+fm(dstr(last)):new Date().toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
   $('#mIn').textContent=money(mi);$('#mOut').textContent=money(-mo).replace('−','');
+  renderPay();
 }
 function renderList(){
   const q=$('#q').value.trim().toLowerCase();
@@ -498,9 +538,9 @@ function renderList(){
   $('#list').innerHTML=html;
 }
 function renderStats(){
-  const p=$('#period').value;const now=new Date();
-  const key=p==='m0'?today().slice(0,7):p==='m1'?dstr(new Date(now.getFullYear(),now.getMonth()-1,1)).slice(0,7):'';
-  const set=tx.filter(t=>!key||t.date.startsWith(key));
+  const p=$('#period').value;
+  const rg=p==='m0'?monthRange(0):p==='m1'?monthRange(1):null;
+  const set=tx.filter(t=>!rg||(t.date>=rg.from&&t.date<rg.to));
   const inc=set.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
   const exp=set.filter(t=>t.type==='expense');
   const out=exp.reduce((a,t)=>a+t.amount,0);
@@ -524,7 +564,7 @@ document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPage(b.dat
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=closePage);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheet)closePage()});
 window.addEventListener('resize',()=>fitBal());
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&srvOn()){if(!pushing)pull();loadRems()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderHero();if(srvOn()){if(!pushing)pull();loadRems()}}});
 $('#q').oninput=renderList;
 $('#period').onchange=renderStats;
 $('#sdot').onclick=async()=>{const ok=await pull();toast(ok?'Синхронізовано з сервером':syncMsg||'Помилка синхронізації',!ok)};
@@ -532,6 +572,7 @@ $('#sdot').onclick=async()=>{const ok=await pull();toast(ok?'Синхроніз�
 /* ---------- settings ---------- */
 function loadSettings(){
   $('#sKey').value=cfg.key;$('#sModel').value=cfg.model;$('#sCur').value=cfg.cur;$('#sSplit').checked=cfg.split;
+  $('#sPay').value=cfg.payDay||1;
   $('#sSbUrl').value=cfg.sbUrl;$('#sSbKey').value=cfg.sbKey;
   renderTgStat();setSync(syncSt,syncMsg);
 }
@@ -588,6 +629,7 @@ $('#tgSave').onclick=async()=>{
 $('#sKey').onchange=e=>{cfg.key=e.target.value.trim();saveCfg();toast('Ключ збережено')};
 $('#sModel').onchange=e=>{cfg.model=e.target.value.trim()||DEF_MODEL;e.target.value=cfg.model;saveCfg();toast('Модель збережено')};
 $('#sCur').onchange=e=>{cfg.cur=e.target.value;saveCfg(true);renderAll()};
+$('#sPay').onchange=e=>{let n=Math.round(+e.target.value);if(!(n>=1&&n<=31))n=1;cfg.payDay=n;e.target.value=n;saveCfg(true);renderAll();toast('Збережено')};
 $('#sSplit').onchange=e=>{cfg.split=e.target.checked;saveCfg()};
 $('#sTest').onclick=async()=>{
   cfg.key=$('#sKey').value.trim();cfg.model=$('#sModel').value.trim()||cfg.model;saveCfg();
