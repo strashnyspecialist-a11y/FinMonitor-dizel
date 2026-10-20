@@ -97,6 +97,13 @@ svg{display:block}
   .payw{height:84px;padding:10px 12px}.payw .pd{font-size:26px}
 }
 
+/* денний ліміт */
+.limw{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.limw .lh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.limw .lh small{font-size:12px;color:var(--mut);font-weight:700}
+.limw .lh b{font-size:22px;font-weight:800;color:var(--g);text-shadow:var(--glow-g);white-space:nowrap;font-variant-numeric:tabular-nums}
+.limw .lh b.bad{color:var(--r);text-shadow:var(--glow-r)}
+.limw .ls{display:block;margin-top:7px;font-size:12px;color:var(--faint);font-weight:600}
 /* pages */
 .page{position:fixed;inset:0;z-index:10;background:var(--bg);overflow-y:auto;overflow-x:hidden;display:none;overscroll-behavior:contain}
 .page.open{display:block}
@@ -233,6 +240,7 @@ h2:first-child{margin-top:0}
       <div><span>Доходи за місяць</span><b id="mIn">0</b></div>
       <div class="out"><span>Витрати за місяць</span><b id="mOut">0</b></div>
     </div>
+    <div id="limw"></div>
   </section>
 
   <section class="actions">
@@ -257,6 +265,7 @@ h2:first-child{margin-top:0}
 <section class="page" id="p-list">
   <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Список витрат</h1></div>
   <div class="pg">
+    <div id="dateFix"></div>
     <input class="search" id="q" type="search" placeholder="Пошук за описом або категорією">
     <div id="list"></div>
   </div>
@@ -345,6 +354,10 @@ h2:first-child{margin-top:0}
       <input id="sPay" type="number" inputmode="numeric" min="1" max="31" placeholder="1">
       <div class="hint">Від цього числа рахуються доходи, витрати й статистика «за місяць». Якщо в місяці менше днів, береться його останній день.</div>
     </label>
+    <label class="f"><span>Денний ліміт витрат</span>
+      <input id="sLim" type="number" inputmode="decimal" min="0" step="1" placeholder="0 — вимкнено">
+      <div class="hint">Залишок або перевитрата за день переходить на наступний: якщо ліміт 30 і сьогодні лишилось 4, завтра буде 34. Відлік іде від початку розрахункового місяця (або від дня, коли ввімкнули ліміт).</div>
+    </label>
     <label class="f"><span>Валюта</span>
       <select id="sCur"></select>
       <div class="hint">Усі суми в додатку відображатимуться в обраній валюті.</div>
@@ -375,7 +388,7 @@ const store={
 let tx=JSON.parse(store.get('sp.tx')||'[]');
 let fuel=JSON.parse(store.get('sp.fuel')||'[]');
 let trainerData=JSON.parse(store.get('sp.trainer')||'null');
-let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,aiConfirm:true,oilLast:null,oilInt:10000,payDay:1,sbUrl:'',sbKey:''},JSON.parse(store.get('sp.cfg')||'{}'));
+let cfg=Object.assign({key:'',model:DEF_MODEL,cur:'UAH',split:true,aiConfirm:true,dayLimit:0,limitFrom:'',oilLast:null,oilInt:10000,payDay:1,sbUrl:'',sbKey:''},JSON.parse(store.get('sp.cfg')||'{}'));
 /* застарілі моделі (2.x) вимкнено Google, переходимо на актуальну */
 if(/^gemini-2\./.test(cfg.model||'')||!cfg.model)cfg.model=DEF_MODEL;
 const meta=Object.assign({updatedAt:0,dirty:false},JSON.parse(store.get('sp.meta')||'{}'));
@@ -386,13 +399,13 @@ const saveFuel=()=>{store.set('sp.fuel',JSON.stringify(fuel));touch()};
 const saveCfg=shared=>{store.set('sp.cfg',JSON.stringify(cfg));if(shared)touch()};
 
 /* ---------- sync із сервером ---------- */
-const snapshot=()=>({v:1,updatedAt:meta.updatedAt,tx,fuel,settings:{cur:cfg.cur,oilLast:cfg.oilLast,oilInt:cfg.oilInt,payDay:cfg.payDay},trainer:trainerData});
+const snapshot=()=>({v:1,updatedAt:meta.updatedAt,tx,fuel,settings:{cur:cfg.cur,oilLast:cfg.oilLast,oilInt:cfg.oilInt,payDay:cfg.payDay,dayLimit:cfg.dayLimit,limitFrom:cfg.limitFrom},trainer:trainerData});
 function applyState(s){
   tx=Array.isArray(s.tx)?s.tx:[];fuel=Array.isArray(s.fuel)?s.fuel:[];
   const st=s.settings||{};
   if(st.cur)cfg.cur=st.cur;
   cfg.oilLast=st.oilLast??null;cfg.oilInt=st.oilInt||10000;
-  cfg.payDay=st.payDay||1;
+  cfg.payDay=st.payDay||1;cfg.dayLimit=+st.dayLimit||0;cfg.limitFrom=st.limitFrom||'';
   store.set('sp.tx',JSON.stringify(tx));store.set('sp.fuel',JSON.stringify(fuel));store.set('sp.cfg',JSON.stringify(cfg));
   if(s.trainer){trainerData=s.trainer;store.set('sp.trainer',JSON.stringify(trainerData))}
   meta.updatedAt=+s.updatedAt||0;meta.dirty=false;saveMeta();
@@ -503,6 +516,25 @@ function fitBal(){
   let fs=parseFloat(getComputedStyle(el).fontSize);
   while(el.scrollWidth>el.clientWidth&&fs>20){fs-=2;el.style.fontSize=fs+'px'}
 }
+function limitInfo(){
+  const L=+cfg.dayLimit||0;if(!(L>0))return null;
+  const r=monthRange(0),t=today();
+  let from=r.from;if(cfg.limitFrom&&cfg.limitFrom>from)from=cfg.limitFrom;if(from>t)from=t;
+  const dn=x=>Math.round(new Date(x+'T00:00:00').getTime()/864e5);
+  const n=dn(t)-dn(from)+1;let before=0,td=0;
+  tx.forEach(x=>{if(x.type!=='expense'||x.date<from||x.date>t)return;if(x.date===t)td+=x.amount;else before+=x.amount});
+  const carry=(n-1)*L-before;
+  return {L,carry,td,left:L+carry-td};
+}
+function renderLimit(){
+  const el=$('#limw');if(!el)return;const i=limitInfo();
+  if(!i){el.innerHTML='';return}
+  const avail=i.L+i.carry,pct=avail>0?Math.min(100,i.td/avail*100):100,bad=i.left<0;
+  const cr=i.carry>=0?'+ '+money(i.carry)+' перенесено':'− '+money(Math.abs(i.carry))+' перевитрата';
+  el.innerHTML=`<div class="limw"><div class="lh"><small>Можна витратити сьогодні</small><b class="${bad?'bad':''}">${money(i.left)}</b></div>
+    <div class="track"><div class="fill ${bad?'':'ok'}" style="width:${Math.max(2,pct)}%"></div></div>
+    <small class="ls">Ліміт ${money(i.L)} ${cr} · витрачено сьогодні ${money(i.td)}</small></div>`;
+}
 function renderHero(){
   let inc=0,out=0,mi=0,mo=0;const r=monthRange(0);
   tx.forEach(t=>{
@@ -516,9 +548,20 @@ function renderHero(){
   const last=new Date(r.to+'T12:00:00');last.setDate(last.getDate()-1);
   $('#dateNow').textContent=(cfg.payDay||1)>1?fm(r.from)+' – '+fm(dstr(last)):new Date().toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
   $('#mIn').textContent=money(mi);$('#mOut').textContent=money(-mo).replace('−','');
-  renderPay();
+  renderPay();renderLimit();
 }
+const idTime=id=>{const n=parseInt(String(id).slice(0,8),36);return n>1.5e12&&n<4e12?n:0};
+function badDateTx(){return tx.filter(t=>{const c=idTime(t.id);return c&&Math.abs(new Date(t.date+'T12:00:00')-c)/864e5>200})}
 function renderList(){
+  const bd=badDateTx(),df=$('#dateFix');
+  df.innerHTML=bd.length?`<div class="card"><p class="oil-sub" style="margin:0 0 12px">У ${bd.length} операціях дата з іншого року (імовірно, помилка розпізнавання). Виправити на рік, коли їх додали?</p><button class="btn main" id="dfBtn" type="button">Виправити дати</button></div>`:'';
+  if($('#dfBtn'))$('#dfBtn').onclick=()=>{
+    bd.forEach(t=>{
+      const c=new Date(idTime(t.id));const y=new Date(c);y.setMonth(+t.date.slice(5,7)-1,+t.date.slice(8,10));
+      if((y-c)/864e5>1)y.setFullYear(y.getFullYear()-1);t.date=dstr(y);
+    });
+    saveTx();renderAll();toast('Дати виправлено');
+  };
   const q=$('#q').value.trim().toLowerCase();
   const items=tx.filter(t=>!q||(t.note+' '+t.category).toLowerCase().includes(q))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
@@ -575,7 +618,7 @@ $('#sdot').onclick=async()=>{const ok=await pull();toast(ok?'Синхроніз�
 function loadSettings(){
   $('#sKey').value=cfg.key;$('#sModel').value=cfg.model;$('#sCur').value=cfg.cur;$('#sSplit').checked=cfg.split;
   $('#sConf').checked=cfg.aiConfirm!==false;
-  $('#sPay').value=cfg.payDay||1;
+  $('#sPay').value=cfg.payDay||1;$('#sLim').value=cfg.dayLimit||'';
   $('#sSbUrl').value=cfg.sbUrl;$('#sSbKey').value=cfg.sbKey;
   renderTgStat();setSync(syncSt,syncMsg);
 }
@@ -633,6 +676,12 @@ $('#sKey').onchange=e=>{cfg.key=e.target.value.trim();saveCfg();toast('Ключ 
 $('#sModel').onchange=e=>{cfg.model=e.target.value.trim()||DEF_MODEL;e.target.value=cfg.model;saveCfg();toast('Модель збережено')};
 $('#sCur').onchange=e=>{cfg.cur=e.target.value;saveCfg(true);renderAll()};
 $('#sPay').onchange=e=>{let n=Math.round(+e.target.value);if(!(n>=1&&n<=31))n=1;cfg.payDay=n;e.target.value=n;saveCfg(true);renderAll();toast('Збережено')};
+$('#sLim').onchange=e=>{
+  const n=Math.max(0,Math.round((parseFloat(String(e.target.value).replace(',','.'))||0)*100)/100);
+  if(n>0&&!(cfg.dayLimit>0))cfg.limitFrom=today();
+  if(!n)cfg.limitFrom='';
+  cfg.dayLimit=n;e.target.value=n||'';saveCfg(true);renderAll();toast(n?'Ліміт збережено':'Ліміт вимкнено');
+};
 $('#sSplit').onchange=e=>{cfg.split=e.target.checked;saveCfg()};
 $('#sConf').onchange=e=>{cfg.aiConfirm=e.target.checked;saveCfg()};
 $('#sTest').onclick=async()=>{
@@ -687,6 +736,17 @@ async function gemini(parts,system){
   if(!text)throw new Error('Gemini не повернув відповіді. Спробуйте ще раз.');
   return text;
 }
+function saneDate(d){
+  const t=new Date(today()+'T12:00:00');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d||''))return today();
+  const x=new Date(d+'T12:00:00'),diff=(x-t)/864e5;
+  if(diff>1||diff<-370){
+    let y=new Date(t);y.setMonth(+d.slice(5,7)-1,+d.slice(8,10));
+    if((y-t)/864e5>1)y.setFullYear(y.getFullYear()-1);
+    return dstr(y);
+  }
+  return d;
+}
 function parseItems(text){
   let j;
   try{j=JSON.parse(text.replace(/^```(?:json)?|```$/g,'').trim())}catch(e){throw new Error('Не вдалося розібрати відповідь Gemini')}
@@ -697,7 +757,7 @@ function parseItems(text){
     amount:Math.abs(parseFloat(String(it.amount).replace(',','.')))||0,
     category:CATS.includes(it.category)?it.category:'Інше',
     note:String(it.note||'').slice(0,120),
-    date:/^\d{4}-\d{2}-\d{2}$/.test(it.date)?it.date:today()
+    date:saneDate(it.date)
   })).filter(it=>it.amount>0);
 }
 
@@ -1053,7 +1113,7 @@ async function runFuelAI(){
     if(Array.isArray(j))j=j[0]||{};
     const L=fnum(j.liters),T=fnum(j.total);let P=fnum(j.price_per_liter);
     if(!P&&L&&T)P=rnd(T/L,2);
-    const f={id:uid(),date:/^\d{4}-\d{2}-\d{2}$/.test(j.date)?j.date:today(),odo:Math.round(fnum(j.odometer))||'',liters:L||'',total:T||'',price:P||''};
+    const f={id:uid(),date:saneDate(j.date),odo:Math.round(fnum(j.odometer))||'',liters:L||'',total:T||'',price:P||''};
     const miss=[!f.odo&&'пробіг',!f.liters&&'літри',!f.total&&'суму'].filter(Boolean);
     openSheet({mode:'fuel',title:'Перевірте заправку',sub:miss.length?`Не вдалося розпізнати: ${miss.join(', ')}. Допишіть вручну.`:'Gemini розпізнав дані. Перевірте й збережіть.',f});
   }catch(e){
@@ -1429,13 +1489,14 @@ const AI_TOOLS=[
   },
   desc:a=>'Заміна мастила'+(a.odometer?` на ${a.odometer} км`:'')},
  {name:'set_settings',write:true,description:'Змінити валюту (код ISO, напр. UAH, USD) та/або день початку місяця (день зарплати, 1–31).',
-  parameters:{type:'object',properties:{currency:STR,pay_day:{type:'integer'}}},
+  parameters:{type:'object',properties:{currency:STR,pay_day:{type:'integer'},daily_limit:{type:'number',description:'денний ліміт витрат, 0 — вимкнути'}}},
   run(a){
     if(a.currency){const c=String(a.currency).toUpperCase();try{new Intl.NumberFormat('uk-UA',{style:'currency',currency:c})}catch(e){throw new Error('Невідома валюта')}cfg.cur=c;$('#sCur').value=c}
     if(a.pay_day){const n=Math.round(+a.pay_day);if(!(n>=1&&n<=31))throw new Error('День має бути від 1 до 31');cfg.payDay=n;$('#sPay').value=n}
+    if(a.daily_limit!=null){const n=Math.max(0,fnum(a.daily_limit));if(n>0&&!(cfg.dayLimit>0))cfg.limitFrom=today();if(!n)cfg.limitFrom='';cfg.dayLimit=n;$('#sLim').value=n||''}
     saveCfg(true);renderAll();return {ok:true};
   },
-  desc:a=>'Налаштування: '+[a.currency&&'валюта '+a.currency,a.pay_day&&'день зарплати '+a.pay_day].filter(Boolean).join(', ')},
+  desc:a=>'Налаштування: '+[a.daily_limit!=null&&'денний ліміт '+a.daily_limit,a.currency&&'валюта '+a.currency,a.pay_day&&'день зарплати '+a.pay_day].filter(Boolean).join(', ')},
  {name:'open_page',description:'Відкрити розділ додатка.',
   parameters:{type:'object',properties:{page:{type:'string',enum:['list','stats','fuel','train','rem','set']}},required:['page']},
   run(a,ctx){ctx.nav=a.page;return {ok:true}}}
