@@ -102,6 +102,14 @@ svg{display:block}
 .limw .lh b{font-size:24px;line-height:1.05;font-weight:800;color:var(--g);text-shadow:var(--glow-g);white-space:nowrap;font-variant-numeric:tabular-nums}
 .limw .lh b.bad{color:var(--r);text-shadow:var(--glow-r)}
 .limw .ls{display:block;margin:0;font-size:10.5px;line-height:1.3;color:var(--faint);font-weight:600}
+/* секундомір */
+.tm{border:1px solid var(--line);background:var(--card);border-radius:24px;padding:20px 16px 16px;text-align:center;margin-bottom:16px}
+.tm .ph{font-size:14px;font-weight:800;letter-spacing:.1em;color:var(--mut)}
+.tm .tt{font-size:clamp(64px,22vw,108px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;margin:8px 0 12px}
+.tm .tr{font-size:13px;color:var(--mut);font-weight:700;min-height:18px}
+.tm.work{border-color:rgba(52,240,140,.5)}.tm.work .ph,.tm.work .tt{color:var(--g);text-shadow:var(--glow-g)}
+.tm.rest{border-color:rgba(140,125,255,.6)}.tm.rest .ph,.tm.rest .tt{color:var(--acc);text-shadow:0 0 14px rgba(140,125,255,.45)}
+.tm.rest .fill{background:var(--acc)}
 /* pages */
 .page{position:fixed;inset:0;z-index:10;background:var(--bg);overflow-y:auto;overflow-x:hidden;display:none;overscroll-behavior:contain}
 .page.open{display:block}
@@ -300,7 +308,7 @@ h2:first-child{margin-top:0}
   </div>
 </section>
 <section class="page" id="p-train">
-  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Тренування 🏋️</h1></div>
+  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Тренування 🏋️</h1><button class="btn" id="tmOpen" type="button" style="margin-left:auto;padding:9px 14px">⏱ Секундомір</button></div>
   <iframe id="trainFrame" title="Тренування" allow="microphone"></iframe>
 </section>
 <section class="page" id="p-rem">
@@ -369,6 +377,20 @@ h2:first-child{margin-top:0}
       <button class="btn" id="sCsvF">Експорт пального у CSV</button>
       <button class="btn danger" id="sClear">Видалити витрати й заправки</button>
     </div>
+  </div>
+</section>
+<section class="page" id="p-timer">
+  <div class="pg-h"><button class="back" id="tmBack" aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Секундомір</h1></div>
+  <div class="pg">
+    <div class="tm" id="tmBox"><div class="ph" id="tmPh">ГОТОВО</div><div class="tt" id="tmTt">0:00</div><div class="track" style="margin:6px 0 10px"><div class="fill ok" id="tmBar" style="width:0%"></div></div><div class="tr" id="tmRd"></div></div>
+    <div class="btns" style="margin-bottom:6px"><button class="btn main" id="tmGo" type="button" style="flex:1;padding:16px;font-size:17px">Старт</button></div>
+    <h2>Робота</h2>
+    <div class="grid2"><label class="f"><span>Хвилин</span><input id="tmWM" type="number" inputmode="numeric" min="0" max="99"></label><label class="f"><span>Секунд</span><input id="tmWS" type="number" inputmode="numeric" min="0" max="59"></label></div>
+    <h2>Відпочинок</h2>
+    <div class="grid2"><label class="f"><span>Хвилин</span><input id="tmRM" type="number" inputmode="numeric" min="0" max="99"></label><label class="f"><span>Секунд</span><input id="tmRS" type="number" inputmode="numeric" min="0" max="59"></label></div>
+    <label class="check"><input type="checkbox" id="tmSnd"> Звуковий сигнал</label>
+    <label class="check"><input type="checkbox" id="tmVib"> Вібрація (не на всіх телефонах)</label>
+    <p class="hint">Після кожної роботи йде відпочинок і знову робота, по колу, поки не натиснете «Стоп». Останні 3 секунди кожного етапу супроводжуються короткими сигналами. Екран не гаситиметься, поки секундомір іде.</p>
   </div>
 </section>
 <div class="ov" id="ov" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
@@ -601,10 +623,11 @@ function renderAll(){renderHero();renderList();renderStats();renderFuel();render
 
 /* ---------- tabs ---------- */
 function openPage(n){
+  if(n!=='timer')stopTimer();
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('open',p.id==='p-'+n));
   $('#p-'+n).scrollTop=0;renderAll();if(n==='rem')loadRems();if(n==='train')openTrain();
 }
-function closePage(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('open'));renderHero()}
+function closePage(){stopTimer();document.querySelectorAll('.page').forEach(p=>p.classList.remove('open'));renderHero()}
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPage(b.dataset.page));
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=closePage);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheet)closePage()});
@@ -1596,6 +1619,87 @@ function drawAgent(){
     if($('#agNav'))$('#agNav').onclick=()=>{const n=s.ctx.nav;closeSheet();openPage(n)};
   }
 }
+
+/* ---------- секундомір (інтервали: робота / відпочинок) ---------- */
+const TM={run:false,phase:'work',end:0,round:1,t0:0,iv:null,ctx:null,wl:null,last:-1,wd:0,rd:0,snd:true,vib:false};
+const mmss=n=>`${Math.floor(n/60)}:${pad(n%60)}`;
+let tmCfg=Object.assign({wm:3,ws:0,rm:1,rs:0,snd:true,vib:false},JSON.parse(store.get('sp.timer')||'{}'));
+function tmLoad(){
+  $('#tmWM').value=tmCfg.wm;$('#tmWS').value=tmCfg.ws;$('#tmRM').value=tmCfg.rm;$('#tmRS').value=tmCfg.rs;
+  $('#tmSnd').checked=tmCfg.snd;$('#tmVib').checked=tmCfg.vib;tmDraw();
+}
+function tmRead(){
+  const g=id=>Math.max(0,Math.min(id.endsWith('M')?99:59,Math.round(+$('#'+id).value||0)));
+  tmCfg={wm:g('tmWM'),ws:g('tmWS'),rm:g('tmRM'),rs:g('tmRS'),snd:$('#tmSnd').checked,vib:$('#tmVib').checked};
+  store.set('sp.timer',JSON.stringify(tmCfg));
+}
+function beep(f,d,w=0,v=.6){
+  if(!TM.snd||!TM.ctx)return;
+  try{
+    const o=TM.ctx.createOscillator(),g=TM.ctx.createGain(),t=TM.ctx.currentTime+w;
+    o.type='sine';o.frequency.value=f;o.connect(g);g.connect(TM.ctx.destination);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.setValueAtTime(v,t+Math.max(.02,d-.04));g.gain.linearRampToValueAtTime(0,t+d);
+    o.start(t);o.stop(t+d+.02);
+  }catch(e){}
+}
+const vib=p=>{if(TM.vib&&navigator.vibrate)try{navigator.vibrate(p)}catch(e){}};
+const sigWork=()=>{beep(988,.16);beep(1319,.16,.2);beep(1760,.4,.4);vib([200,80,200,80,300])};
+const sigRest=()=>{beep(660,.3);beep(440,.6,.35);vib([600])};
+function tmDraw(){
+  const box=$('#tmBox');if(!box)return;
+  if(!TM.run){
+    box.className='tm';$('#tmPh').textContent='ГОТОВО';$('#tmTt').textContent=mmss(tmCfg.wm*60+tmCfg.ws);
+    $('#tmBar').style.width='0%';$('#tmRd').textContent='';return;
+  }
+  const now=Date.now(),dur=(TM.phase==='work'?TM.wd:TM.rd)*1000,left=Math.max(0,TM.end-now);
+  box.className='tm '+TM.phase;
+  $('#tmPh').textContent=TM.phase==='work'?'РОБОТА':'ВІДПОЧИНОК';
+  $('#tmTt').textContent=mmss(Math.ceil(left/1000));
+  $('#tmBar').style.width=Math.min(100,(1-left/dur)*100)+'%';
+  $('#tmRd').textContent=`Раунд ${TM.round} · загальний час ${mmss(Math.floor((now-TM.t0)/1000))}`;
+}
+function tmTick(){
+  const now=Date.now();let sw=null;
+  while(now>=TM.end){
+    if(TM.phase==='work'&&TM.rd>0){TM.phase='rest';TM.end+=TM.rd*1000;sw='rest'}
+    else{if(TM.phase==='rest'||TM.rd===0)TM.round++;TM.phase='work';TM.end+=TM.wd*1000;sw='work'}
+    TM.last=-1;
+  }
+  if(sw){sw==='work'?sigWork():sigRest()}
+  else{
+    const left=Math.ceil((TM.end-now)/1000),dur=TM.phase==='work'?TM.wd:TM.rd;
+    if(left<=3&&left>=1&&dur>3&&left!==TM.last){TM.last=left;beep(880,.09,0,.4);vib([60])}
+  }
+  tmDraw();
+}
+async function tmStart(){
+  tmRead();
+  TM.wd=tmCfg.wm*60+tmCfg.ws;TM.rd=tmCfg.rm*60+tmCfg.rs;TM.snd=tmCfg.snd;TM.vib=tmCfg.vib;
+  if(TM.wd<1)return toast('Вкажіть час роботи',true);
+  try{TM.ctx=TM.ctx||new (window.AudioContext||window.webkitAudioContext)();await TM.ctx.resume()}catch(e){}
+  try{if(navigator.wakeLock)TM.wl=await navigator.wakeLock.request('screen')}catch(e){}
+  TM.run=true;TM.phase='work';TM.round=1;TM.t0=Date.now();TM.end=TM.t0+TM.wd*1000;TM.last=-1;
+  sigWork();clearInterval(TM.iv);TM.iv=setInterval(tmTick,100);
+  ['tmWM','tmWS','tmRM','tmRS','tmSnd','tmVib'].forEach(i=>$('#'+i).disabled=true);
+  $('#tmGo').textContent='Стоп';$('#tmGo').className='btn danger';$('#tmGo').style.cssText='flex:1;padding:16px;font-size:17px';
+  tmDraw();
+}
+function stopTimer(){
+  if(!TM.run)return;
+  TM.run=false;clearInterval(TM.iv);
+  try{TM.wl&&TM.wl.release()}catch(e){}TM.wl=null;
+  ['tmWM','tmWS','tmRM','tmRS','tmSnd','tmVib'].forEach(i=>$('#'+i).disabled=false);
+  const g=$('#tmGo');g.textContent='Старт';g.className='btn main';g.style.cssText='flex:1;padding:16px;font-size:17px';
+  tmDraw();
+}
+$('#tmGo').onclick=()=>TM.run?stopTimer():tmStart();
+$('#tmOpen').onclick=()=>{openPage('timer');tmLoad()};
+$('#tmBack').onclick=()=>{stopTimer();openPage('train')};
+['tmWM','tmWS','tmRM','tmRS','tmSnd','tmVib'].forEach(i=>$('#'+i).onchange=()=>{tmRead();tmDraw()});
+document.addEventListener('visibilitychange',async()=>{
+  if(!document.hidden&&TM.run){try{if(navigator.wakeLock&&!TM.wl)TM.wl=await navigator.wakeLock.request('screen')}catch(e){}try{TM.ctx&&await TM.ctx.resume()}catch(e){}tmTick()}
+});
+tmLoad();
 
 /* ---------- currencies ---------- */
 function fillCur(){
