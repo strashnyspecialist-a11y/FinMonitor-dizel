@@ -602,6 +602,45 @@ h2:first-child{margin-top:0}
   .btn.nightb { background: var(--night); color: #0d1240; border-color: var(--night); }
   .link { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 14px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* === Компактний екран без прокрутки === */
+  [hidden]{display:none!important}
+  html,body{height:100%;overflow:hidden}
+  body{padding:env(safe-area-inset-top) 0 0!important}
+  .wrap{height:100%;display:flex;flex-direction:column;padding:0 10px calc(54px + env(safe-area-inset-bottom))}
+  .top{padding:8px 0 4px}
+  .brand{font-size:17px}
+  .top .icon-btn{width:34px;height:34px;font-size:17px}
+  #viewLog,#viewPlan{flex:1;min-height:0;display:flex;flex-direction:column}
+  .hero{margin:4px 0 8px}
+  .go{min-height:60px;font-size:24px;border-radius:18px;gap:0;box-shadow:0 4px 0 var(--go-deep)}
+  .go.done{min-height:60px}
+  .go small{font-size:12px}
+  #goHint,.legend,#viewPlan .note{display:none}
+  .month{margin:2px 0 6px}
+  .month h2{font-size:18px}
+  .month .icon-btn{width:32px;height:32px;font-size:16px}
+  .sum{padding:10px 12px;margin-bottom:8px;border-radius:16px}
+  .earned .big{font-size:30px}
+  .earned .big span{font-size:16px}
+  .earned .exp b{font-size:14px}
+  .bar{height:6px;margin:8px 0}
+  .stats b{font-size:16px}
+  .stats div{font-size:11px}
+  .vt{margin-bottom:6px}
+  .vt button{padding:7px 4px;font-size:14px}
+  #calWrap{flex:1;min-height:0;display:flex;flex-direction:column}
+  #listWrap{flex:1;min-height:0;overflow-y:auto}
+  .cal{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-bottom:0}
+  #calLog,#cal{flex:1;min-height:0;grid-template-rows:auto repeat(6,minmax(0,1fr))}
+  .cal .wdh{padding:2px 0;font-size:11px}
+  .cell{aspect-ratio:auto;min-width:0;border-radius:9px;gap:0}
+  .cell b{font-size:13px;line-height:1.1}
+  .cell em{font-size:10px}
+  .cell.lc{gap:0}
+  .cell.lc strong{font-size:10px;line-height:1.15;white-space:nowrap}
+  .cell.lc small{font-size:8.5px;line-height:1.1}
+  .tabs button{padding:10px 0 8px}
 </style>
 </head>
 <body>
