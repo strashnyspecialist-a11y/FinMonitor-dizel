@@ -607,7 +607,9 @@ h2:first-child{margin-top:0}
   [hidden]{display:none!important}
   html,body{height:100%;overflow:hidden}
   body{padding:env(safe-area-inset-top) 0 0!important}
-  .wrap{height:100%;display:flex;flex-direction:column;padding:0 10px calc(54px + env(safe-area-inset-bottom))}
+  .wrap{height:100%;max-width:100vw;overflow:hidden;display:flex;flex-direction:column;padding:0 10px calc(54px + env(safe-area-inset-bottom))}
+  #viewLog,#viewPlan,.sum,.stats,.stats div{min-width:0}
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
   .top{padding:8px 0 4px}
   .brand{font-size:17px}
   .top .icon-btn{width:34px;height:34px;font-size:17px}
@@ -629,17 +631,26 @@ h2:first-child{margin-top:0}
   .stats div{font-size:11px}
   .vt{margin-bottom:6px}
   .vt button{padding:7px 4px;font-size:14px}
-  #calWrap{flex:1;min-height:0;display:flex;flex-direction:column}
+  /* Календар «Облік»: клітинки вищі, вміст не виступає; якщо не вміщається, календар прокручується */
+  #calWrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
   #listWrap{flex:1;min-height:0;overflow-y:auto}
-  .cal{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-bottom:0}
-  #calLog,#cal{flex:1;min-height:0;grid-template-rows:auto repeat(6,minmax(0,1fr))}
+  .cal{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:0}
+  #calLog{flex:1;min-height:0;grid-template-rows:auto repeat(6,minmax(0,1fr));padding-bottom:4px}
+  #cal{flex:1;min-height:0;grid-template-rows:auto repeat(6,minmax(0,1fr))}
   .cal .wdh{padding:2px 0;font-size:11px}
   .cell{aspect-ratio:auto;min-width:0;border-radius:9px;gap:0}
   .cell b{font-size:13px;line-height:1.1}
   .cell em{font-size:10px}
-  .cell.lc{gap:0}
-  .cell.lc strong{font-size:10px;line-height:1.15;white-space:nowrap}
-  .cell.lc small{font-size:8.5px;line-height:1.1}
+  /* вміст клітинки масштабується разом із самою клітинкою і ніколи не виходить за її межі */
+  .cell.lc{gap:0;justify-content:space-evenly;padding:1px;overflow:hidden;min-height:0;container-type:size}
+  .cell.lc b{font-size:12px;line-height:1.1}
+  .cell.lc strong{font-size:10px;line-height:1.1;white-space:nowrap}
+  .cell.lc small{font-size:9px;line-height:1.1;white-space:nowrap}
+  @supports (font-size:1cqh){
+    .cell.lc b{font-size:min(24cqh,30cqw)}
+    .cell.lc strong{font-size:min(21cqh,22cqw)}
+    .cell.lc small{font-size:min(17cqh,19cqw)}
+  }
   .tabs button{padding:10px 0 8px}
 </style>
 </head>
@@ -917,6 +928,7 @@ h2:first-child{margin-top:0}
     $('#list').innerHTML = html;
     $('#calLog').innerHTML = WD_SHORT.map((w, i) => `<span class="wdh ${i > 4 ? 'we' : ''}">${w}</span>`).join('') + '<span class="empty"></span>'.repeat(offset) + cells;
     applyLogView();
+    $('#calLog').style.gridTemplateRows = 'auto repeat(' + Math.ceil((offset + n) / 7) + ', minmax(0, 1fr))';
 
     const rate = Number(state.settings.rate) || 0;
     $('#earnedNum').textContent = Math.round(worked * rate).toLocaleString('uk-UA');
