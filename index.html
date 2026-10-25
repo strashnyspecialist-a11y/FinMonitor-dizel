@@ -63,18 +63,27 @@ svg{display:block}
 .payw .pd span{font-size:13px;color:var(--mut);font-weight:700;margin-left:5px;text-shadow:none}
 .payw .pd.now{font-size:16px;line-height:1.15;white-space:normal}
 .payw .track{height:5px}
-.aibar{
-  display:flex;align-items:center;gap:14px;width:100%;padding:12px 14px;border-radius:20px;text-align:left;
-  background:linear-gradient(135deg,rgba(140,125,255,.30),rgba(140,125,255,.10));border:1.5px solid var(--acc);
-  box-shadow:0 0 24px rgba(140,125,255,.22);transition:transform .1s;
+
+/* AI + Робота: компактний ряд */
+.airow{display:grid;grid-template-columns:1.3fr 1fr;gap:10px}
+.aibar,.workbtn{
+  display:flex;align-items:center;gap:10px;width:100%;min-width:0;padding:9px 11px;border-radius:18px;text-align:left;
+  transition:transform .1s;
 }
-.aibar:active{transform:scale(.985)}
-.aibar .mi{width:44px;height:44px;border-radius:14px;background:var(--acc);color:#0c0c10;display:grid;place-items:center;flex:none}
-.aibar .mi svg{width:24px;height:24px}
-.aibar b{display:block;font-size:16px;font-weight:800}
-.aibar small{display:block;font-size:12px;color:var(--mut);font-weight:600}
-.aibar .ch{margin-left:auto;color:var(--acc)}
-.aibar .ch svg{width:20px;height:20px}
+.aibar:active,.workbtn:active{transform:scale(.97)}
+.aibar{
+  background:linear-gradient(135deg,rgba(140,125,255,.30),rgba(140,125,255,.10));border:1.5px solid var(--acc);
+  box-shadow:0 0 18px rgba(140,125,255,.2);
+}
+.workbtn{background:linear-gradient(135deg,rgba(52,240,140,.16),rgba(52,240,140,.04));border:1.5px solid rgba(52,240,140,.55)}
+.aibar .mi,.workbtn .mi{width:36px;height:36px;border-radius:12px;color:#0c0c10;display:grid;place-items:center;flex:none}
+.aibar .mi{background:var(--acc)}
+.workbtn .mi{background:var(--g)}
+.aibar .mi svg,.workbtn .mi svg{width:20px;height:20px}
+.aibar .tx,.workbtn .tx{min-width:0;display:block}
+.aibar b,.workbtn b{display:block;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aibar small,.workbtn small{display:block;font-size:11px;color:var(--mut);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .act{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 6px;min-height:78px;border-radius:16px;
@@ -93,7 +102,7 @@ svg{display:block}
 .tile:hover{background:var(--card2);border-color:#3a3a46}
 .tile svg{width:21px;height:21px;color:var(--mut)}
 @media(max-height:720px){
-  .app{gap:8px}.balc{padding:11px 12px 10px}.pair{margin-top:8px}.act{min-height:66px;padding:8px 4px}.tile{min-height:58px;padding:8px 4px}.aibar{padding:9px 12px}.aibar .mi{width:38px;height:38px}
+  .app{gap:8px}.balc{padding:11px 12px 10px}.pair{margin-top:8px}.act{min-height:66px;padding:8px 4px}.tile{min-height:58px;padding:8px 4px}.aibar,.workbtn{padding:7px 10px}.aibar .mi,.workbtn .mi{width:32px;height:32px}
 }
 /* денний ліміт */
 .limw{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between;gap:7px;height:100%}
@@ -186,11 +195,11 @@ h2:first-child{margin-top:0}
 .chip{padding:8px 11px;border-radius:10px;border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--faint)}
 .chip.on{background:rgba(140,125,255,.18);color:var(--acc);border-color:var(--acc)}
 
-/* trainer page */
-#p-train{overflow:hidden}
-#p-train.open{display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
-#p-train .pg-h{flex:none}
-#trainFrame{flex:1;min-height:0;width:100%;border:0;background:var(--bg);display:block}
+/* trainer + work pages (iframe) */
+#p-train,#p-work{overflow:hidden}
+#p-train.open,#p-work.open{display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+#p-train .pg-h,#p-work .pg-h{flex:none}
+#trainFrame,#workFrame{flex:1;min-height:0;width:100%;border:0;background:var(--bg);display:block}
 
 /* sheet */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:flex-end;justify-content:center;z-index:20}
@@ -249,7 +258,10 @@ h2:first-child{margin-top:0}
 
   <section class="info"><div id="limw"></div><div class="payw" id="payw"></div></section>
 
-  <button class="aibar" id="aAI" aria-label="AI-асистент"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span><b>AI-асистент</b><small>Скажіть або напишіть команду</small></span><span class="ch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></button>
+  <section class="airow">
+    <button class="aibar" id="aAI" aria-label="AI-асистент"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="tx"><b>AI-асистент</b><small>Голос або текст</small></span></button>
+    <button class="workbtn" id="aWork" aria-label="Робота: графік"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg></span><span class="tx"><b>Робота</b><small>Графік</small></span></button>
+  </section>
 
   <section class="actions">
     <button class="act" id="aManual"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Вручну</button>
@@ -310,6 +322,10 @@ h2:first-child{margin-top:0}
 <section class="page" id="p-train">
   <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Тренування 🏋️</h1><button class="btn" id="tmOpen" type="button" style="margin-left:auto;padding:9px 14px">⏱ Секундомір</button></div>
   <iframe id="trainFrame" title="Тренування" allow="microphone"></iframe>
+</section>
+<section class="page" id="p-work">
+  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Робота</h1></div>
+  <iframe id="workFrame" title="Графік роботи"></iframe>
 </section>
 <section class="page" id="p-rem">
   <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Нагадування</h1></div>
@@ -395,6 +411,688 @@ h2:first-child{margin-top:0}
 </section>
 <div class="ov" id="ov" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast" role="status"></div>
+
+<!-- Вбудований застосунок «Grafik praca» (відкривається у вкладці «Робота»).
+     Закриваючий тег script всередині записано як <\/script> і відновлюється при запуску. -->
+<script type="text/html" id="workTpl">
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Grafik praca</title>
+<style>
+  :root {
+    --ink: #101214;
+    --panel: #181b1e;
+    --line: #262b30;
+    --text: #eef1f3;
+    --muted: #8b949c;
+    --go: #2fe26c;
+    --go-deep: #14a84a;
+    --day: #ffc83d;
+    --night: #8e9bff;
+    --off: #ff5d5d;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--ink); color: var(--text);
+    font-family: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+    font-variant-numeric: tabular-nums; }
+  body { padding: env(safe-area-inset-top) 0 calc(40px + env(safe-area-inset-bottom)); }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 0 16px; }
+  button { font: inherit; color: inherit; }
+
+  /* top bar */
+  .top { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 8px; }
+  .brand { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+  .icon-btn { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    width: 42px; height: 42px; display: grid; place-items: center; font-size: 20px; cursor: pointer; }
+
+  /* hero */
+  .hero { margin: 8px 0 20px; }
+  .go {
+    width: 100%; min-height: 168px; border: 0; border-radius: 28px; cursor: pointer;
+    background: var(--go); color: #05260f; font-size: 44px; font-weight: 900; letter-spacing: -0.03em;
+    box-shadow: 0 8px 0 var(--go-deep), 0 18px 40px rgba(47,226,108,.18);
+    transition: transform .08s ease, box-shadow .08s ease;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  }
+  .go:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--go-deep), 0 6px 14px rgba(47,226,108,.15); }
+  .go small { font-size: 16px; font-weight: 700; letter-spacing: 0; opacity: .78; }
+  .go.done { background: var(--panel); color: var(--go); border: 2px solid var(--go);
+    box-shadow: none; min-height: 130px; }
+  .go.done:active { transform: none; }
+  .hint { margin: 14px 2px 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
+  .hint b { color: var(--text); font-weight: 600; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .dot.day { background: var(--day); } .dot.night { background: var(--night); }
+
+  /* month nav */
+  .month { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 12px; }
+  .month h2 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; text-transform: capitalize; }
+  .month .arrows { display: flex; gap: 8px; }
+  .month .icon-btn { width: 38px; height: 38px; font-size: 18px; }
+
+  /* summary */
+  .sum { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 18px; margin-bottom: 20px; }
+  .earned { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .earned .big { font-size: 46px; font-weight: 900; letter-spacing: -0.04em; color: var(--go); line-height: 1; }
+  .earned .big span { font-size: 24px; margin-left: 4px; }
+  .earned .exp { text-align: right; color: var(--muted); font-size: 13px; line-height: 1.35; }
+  .earned .exp b { display: block; font-size: 18px; color: var(--off); font-weight: 800; }
+  .bar { height: 10px; background: var(--line); border-radius: 6px; margin: 16px 0 12px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--go); border-radius: 6px; width: 0; transition: width .4s ease; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stats div { font-size: 12px; color: var(--muted); }
+  .stats b { display: block; font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+
+  /* list */
+  .head, .row { display: grid; grid-template-columns: 24px 1fr 62px 66px 44px; align-items: center; gap: 6px; }
+  .head { padding: 0 12px 6px; color: var(--muted); font-size: 12px; }
+  .head span:nth-child(n+4) { text-align: right; }
+  .row { width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; }
+  .row.today { border-color: var(--go); }
+  .row.future { opacity: .5; }
+  .mark { font-size: 18px; font-weight: 900; }
+  .mark.ok { color: var(--go); } .mark.no { color: var(--off); } .mark.wait { color: var(--muted); }
+  .date b { font-size: 16px; font-weight: 700; }
+  .date i { display: block; font-style: normal; font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .date i.sat { color: var(--day); } .date i.sun { color: var(--off); }
+  .shift { font-size: 13px; font-weight: 700; }
+  .shift.day { color: var(--day); } .shift.night { color: var(--night); } .shift.off { color: var(--muted); font-weight: 500; }
+  .plan { text-align: right; color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .plan.day, .plan.night { font-weight: 700; }
+  .plan.day { color: var(--day); } .plan.night { color: var(--night); }
+  .hrs { text-align: right; font-size: 20px; font-weight: 800; }
+  .hrs.zero { color: var(--muted); font-weight: 600; }
+
+  /* sheets / dialogs */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.62); display: none; align-items: flex-end;
+    justify-content: center; z-index: 20; }
+  .scrim.open { display: flex; }
+  .sheet { width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; background: var(--panel);
+    border-radius: 26px 26px 0 0; padding: 22px 18px calc(24px + env(safe-area-inset-bottom));
+    border: 1px solid var(--line); border-bottom: 0; }
+  .sheet h3 { margin: 0 0 14px; font-size: 20px; letter-spacing: -0.02em; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 16px; }
+  .seg button { background: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 12px 4px; font-weight: 700; cursor: pointer; }
+  .seg button.on[data-s="day"] { background: var(--day); color: #261c00; border-color: var(--day); }
+  .seg button.on[data-s="night"] { background: var(--night); color: #0d1240; border-color: var(--night); }
+  .seg button.on[data-s="off"] { background: var(--off); color: #2c0000; border-color: var(--off); }
+  label.f { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+  input[type=number], textarea, input[type=text] {
+    width: 100%; background: var(--ink); color: var(--text); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px; font: inherit; font-size: 18px; margin-bottom: 14px; }
+  textarea { font-size: 12px; min-height: 90px; font-family: ui-monospace, Menlo, monospace; }
+  input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+  .actions { display: flex; gap: 8px; margin-top: 6px; }
+  .btn { flex: 1; border: 1px solid var(--line); background: var(--ink); border-radius: 14px; padding: 14px; font-weight: 700; cursor: pointer; }
+  .btn.main { background: var(--go); color: #05260f; border-color: var(--go); }
+  .check { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 15px; }
+  .check input { width: 22px; height: 22px; accent-color: var(--go); }
+  .sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
+  .note { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 0 0 12px; }
+  .linkbox { word-break: break-all; font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+    background: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+
+  /* check-in confirmation */
+  .confirm { position: fixed; inset: 0; z-index: 30; background: var(--go); color: #05260f; display: none;
+    flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .confirm.open { display: flex; }
+  .confirm .tick { font-size: 110px; font-weight: 900; line-height: 1; }
+  .confirm h1 { font-size: 34px; margin: 10px 0 6px; letter-spacing: -0.03em; }
+  .confirm p { font-size: 18px; margin: 0 0 28px; font-weight: 600; opacity: .8; }
+  .confirm button { background: #05260f; color: var(--go); border: 0; border-radius: 16px; padding: 16px 34px; font-size: 18px; font-weight: 800; cursor: pointer; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--ink); padding: 12px 18px; border-radius: 14px; font-weight: 700; font-size: 14px;
+    opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 40; max-width: 90vw; text-align: center; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* tabs */
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: rgba(16,18,20,.96);
+    border-top: 1px solid var(--line); display: flex; justify-content: center;
+    padding-bottom: env(safe-area-inset-bottom); }
+  .tabs .in { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 520px; }
+  .tabs button { background: none; border: 0; padding: 14px 0 12px; font-weight: 800; font-size: 15px; color: var(--muted); cursor: pointer; }
+  .tabs button.on { color: var(--go); box-shadow: inset 0 3px 0 var(--go); }
+  body { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
+
+  /* log view toggle + calendar cells */
+  .vt { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+  .vt button { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 11px 4px; font-weight: 700; color: var(--muted); cursor: pointer; }
+  .vt button.on { background: var(--go); color: #05260f; border-color: var(--go); }
+  .cal span.wdh { text-align: center; }
+  .cell.lc { gap: 2px; }
+  .cell.lc.w-day { background: rgba(255,200,61,.14); border-color: rgba(255,200,61,.65); }
+  .cell.lc.w-night { background: rgba(142,155,255,.16); border-color: rgba(142,155,255,.7); }
+  .cell.lc.miss { border-color: rgba(255,93,93,.6); }
+  .cell.lc.today { border-color: var(--go); border-width: 2px; }
+  .cell.lc.future { opacity: .55; }
+  .cell.lc strong { font-size: 13px; font-weight: 800; }
+  .cell.lc strong.cd { color: var(--day); } .cell.lc strong.cn { color: var(--night); } .cell.lc strong.cx { color: var(--off); }
+  .cell.lc small { font-size: 10px; color: var(--muted); font-weight: 700; }
+  .legend { color: var(--muted); font-size: 12px; margin: -6px 2px 14px; line-height: 1.4; }
+  /* plan calendar */
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 16px; }
+  .cal .wdh { background: none; border: 0; color: var(--muted); font-size: 12px; font-weight: 700; padding: 6px 0; cursor: pointer; }
+  .cal .wdh.we { color: var(--off); }
+  .cal .empty { visibility: hidden; }
+  .cell { aspect-ratio: 1 / 1.12; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; padding: 0; }
+  .cell b { font-size: 17px; font-weight: 700; }
+  .cell em { font-style: normal; font-size: 11px; font-weight: 800; }
+  .cell em.day { color: var(--day); } .cell em.night { color: var(--night); }
+  .cell.has.d { border-color: rgba(255,200,61,.45); }
+  .cell.has.n { border-color: rgba(142,155,255,.5); }
+  .cell.sel { background: var(--go); color: #05260f; border-color: var(--go); }
+  .cell.sel em { color: #05260f; }
+  .cell.today b { text-decoration: underline; text-underline-offset: 4px; }
+  .planbar { position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom)); z-index: 9;
+    background: var(--panel); border-top: 1px solid var(--line); display: none; justify-content: center; }
+  .planbar.show { display: flex; }
+  .planbar .in { width: 100%; max-width: 520px; padding: 12px 16px; }
+  .planbar .top2 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--muted); }
+  .planbar .top2 label { display: flex; align-items: center; gap: 8px; }
+  .planbar input[type=number] { width: 72px; margin: 0; padding: 8px; font-size: 16px; }
+  .planbar .actions { margin: 0; }
+  .btn.dayb { background: var(--day); color: #261c00; border-color: var(--day); }
+  .btn.nightb { background: var(--night); color: #0d1240; border-color: var(--night); }
+  .link { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 14px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">Grafik praca</div>
+    <button class="icon-btn" id="openSettings" aria-label="Налаштування">⚙︎</button>
+  </div>
+
+  <div id="viewLog">
+  <section class="hero">
+    <button class="go" id="goBtn"></button>
+    <p class="hint" id="goHint"></p>
+  </section>
+
+  <div class="month">
+    <h2 id="monthTitle"></h2>
+    <div class="arrows">
+      <button class="icon-btn" id="prevM" aria-label="Попередній місяць">‹</button>
+      <button class="icon-btn" id="nextM" aria-label="Наступний місяць">›</button>
+    </div>
+  </div>
+
+  <section class="sum">
+    <div class="earned">
+      <div class="big"><span id="earnedNum"></span><span>zł</span></div>
+      <div class="exp">очікується<b id="expNum"></b></div>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="stats">
+      <div><b id="stWorked"></b>відпрацьовано год</div>
+      <div><b id="stPlanned"></b>заплановано год</div>
+      <div><b id="stDays"></b>робочих днів</div>
+    </div>
+  </section>
+
+  <div class="vt" id="vt">
+    <button data-v="cal">Календар</button>
+    <button data-v="list">Список</button>
+  </div>
+  <div id="calWrap">
+    <div class="cal" id="calLog"></div>
+    <p class="legend">Зверху — факт, внизу сірим — план. ✕ — запланований день пропущено.</p>
+  </div>
+  <div id="listWrap">
+  <div class="head"><span></span><span>Дата</span><span>Зміна</span><span>План</span><span>Год</span></div>
+  <div id="list"></div>
+  </div>
+  </div>
+
+  <div id="viewPlan" hidden>
+    <div class="month">
+      <h2 id="pTitle"></h2>
+      <div class="arrows">
+        <button class="icon-btn" id="pPrev" aria-label="Попередній місяць">‹</button>
+        <button class="icon-btn" id="pNext" aria-label="Наступний місяць">›</button>
+      </div>
+    </div>
+    <p class="note">Торкайся днів, щоб виділити їх, потім обери «Денна» або «Нічна». Торкнись «Пн», «Вт» тощо, щоб виділити всі такі дні місяця.</p>
+    <div class="sum">
+      <div class="stats">
+        <div><b id="pHours"></b>годин за планом</div>
+        <div><b id="pDays"></b>змін за планом</div>
+        <div><b id="pMoney"></b>zł очікується</div>
+      </div>
+    </div>
+    <div class="cal" id="cal"></div>
+  </div>
+</div>
+
+<div class="planbar" id="planbar">
+  <div class="in">
+    <div class="top2">
+      <span id="selCount"></span>
+      <label>Годин <input type="number" id="planHours" min="0" max="24" step="0.5" inputmode="decimal"></label>
+      <button class="link" id="selClear">Зняти вибір</button>
+    </div>
+    <div class="actions">
+      <button class="btn dayb" id="planDay">☀ Денна</button>
+      <button class="btn nightb" id="planNight">☾ Нічна</button>
+      <button class="btn" id="planOff">Прибрати</button>
+    </div>
+  </div>
+</div>
+
+<nav class="tabs"><div class="in">
+  <button id="tabLog" class="on">Облік</button>
+  <button id="tabPlan">План</button>
+</div></nav>
+
+<!-- edit day -->
+<div class="scrim" id="editScrim">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <h3 id="editTitle"></h3>
+    <div class="seg" id="seg">
+      <button data-s="day">День</button>
+      <button data-s="night">Ніч</button>
+      <button data-s="off">Вихідний</button>
+    </div>
+    <label class="f" for="editHours">Робочі години</label>
+    <input type="number" id="editHours" min="0" max="24" step="0.5" inputmode="decimal">
+    <div class="actions">
+      <button class="btn" id="editCancel">Скасувати</button>
+      <button class="btn" id="editClear">Очистити</button>
+      <button class="btn main" id="editSave">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<!-- settings -->
+<div class="scrim" id="setScrim">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <h3>Налаштування</h3>
+    <label class="f" for="setRate">Ставка нетто, zł за годину</label>
+    <input type="number" id="setRate" min="0" step="0.5" inputmode="decimal">
+    <label class="f" for="setHours">Годин за зміну за замовчуванням</label>
+    <input type="number" id="setHours" min="0" max="24" step="0.5" inputmode="decimal">
+    <div class="actions"><button class="btn main" id="setSave">Зберегти</button></div>
+
+    <hr class="sep">
+    <h3>Посилання для автоматизації</h3>
+    <p class="note">Відкриття цього посилання робить те саме, що натискання зеленої кнопки. Додай його в Команди (Shortcuts) на iPhone: «Коли я прибуваю» → місце роботи → «Відкрити URL».</p>
+    <div class="linkbox" id="linkBox"></div>
+    <div class="actions"><button class="btn" id="copyLink">Скопіювати посилання</button></div>
+
+    <hr class="sep">
+    <h3>Резервна копія</h3>
+    <p class="note">Дані зберігаються в цьому браузері. Скопіюй їх як текст, щоб не втратити або перенести на інший пристрій.</p>
+    <textarea id="backupBox" placeholder="Тут з’являться дані або вставте їх для відновлення"></textarea>
+    <div class="actions">
+      <button class="btn" id="doExport">Експорт</button>
+      <button class="btn" id="doImport">Відновити</button>
+    </div>
+    <div class="actions"><button class="btn" id="setClose" style="margin-top:14px">Закрити</button></div>
+  </div>
+</div>
+
+<!-- check-in confirmation (shown when opened via link) -->
+<div class="confirm" id="confirm">
+  <div class="tick">✓</div>
+  <h1 id="cfTitle"></h1>
+  <p id="cfSub"></p>
+  <button id="cfClose">Готово</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const KEY = 'grafik-praca-v1';
+  const MONTHS = ['січень','лютий','березень','квітень','травень','червень','липень','серпень','вересень','жовтень','листопад','грудень'];
+  const WD = ['Неділя','Понеділок','Вівторок','Середа','Четвер','П’ятниця','Субота'];
+  const WD_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+  const SHIFT_NAME = { day: 'денна зміна', night: 'нічна зміна', off: 'вихідний' };
+  const SHIFT_TIME = { day: '06:00–18:00', night: '18:00–06:00' };
+  const DAY_FROM = 4 * 60 + 30;   // 04:30
+  const DAY_TO   = 16 * 60 + 30;  // 16:30
+
+  const $ = s => document.querySelector(s);
+  let memory = null; // fallback if browser storage is blocked
+
+  /* ---------- storage ---------- */
+  function defaults() { return { settings: { rate: 23, hours: 12, logView: 'cal' }, days: {}, plan: {} }; }
+  function load() {
+    let raw = null;
+    try { raw = localStorage.getItem(KEY); } catch (e) { raw = memory; }
+    if (!raw) return defaults();
+    try {
+      const d = JSON.parse(raw), base = defaults();
+      return { settings: Object.assign(base.settings, d.settings || {}), days: d.days || {}, plan: d.plan || {} };
+    } catch (e) { return defaults(); }
+  }
+  function save() {
+    const raw = JSON.stringify(state);
+    try { localStorage.setItem(KEY, raw); } catch (e) { memory = raw; }
+  }
+  let state = load();
+
+  /* ---------- date helpers ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const fromKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const fmtDM = d => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
+  const ic = s => s === 'day' ? '☀' : '☾';
+  const fmtNum = n => (Math.round(n * 100) / 100).toString().replace('.', ',');
+
+  /* Which shift and which date would a tap right now record? */
+  function target(now = new Date()) {
+    const mins = now.getHours() * 60 + now.getMinutes();
+    if (mins >= DAY_FROM && mins < DAY_TO) return { shift: 'day', date: new Date(now.getFullYear(), now.getMonth(), now.getDate()) };
+    // night shift: after 16:30 starts today; after midnight (before 04:30) it started yesterday
+    const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (mins < DAY_FROM) base.setDate(base.getDate() - 1);
+    return { shift: 'night', date: base };
+  }
+
+  function plannedFor(d) {
+    const p = state.plan[keyOf(d)];
+    return p ? (Number(p.hours) || 0) : 0;
+  }
+
+  /* ---------- check-in ---------- */
+  function checkIn() {
+    const t = target();
+    const k = keyOf(t.date);
+    const rec = state.days[k];
+    if (rec && rec.shift !== 'off') return { status: 'already', t, rec };
+    state.days[k] = { shift: t.shift, hours: Number(state.settings.hours) || 12, auto: true };
+    save();
+    return { status: 'saved', t };
+  }
+
+  /* ---------- view state ---------- */
+  const today = new Date();
+  let view = { y: today.getFullYear(), m: today.getMonth() };
+
+  function renderHero() {
+    const t = target();
+    const rec = state.days[keyOf(t.date)];
+    const btn = $('#goBtn'), hint = $('#goHint');
+    const dot = `<span class="dot ${t.shift}"></span>`;
+    if (rec && rec.shift !== 'off') {
+      btn.className = 'go done';
+      btn.innerHTML = `✓ Відмічено<small>${SHIFT_NAME[rec.shift]} · ${fmtDM(t.date)}</small>`;
+      hint.innerHTML = `Зміну на ${fmtDM(t.date)} вже записано. Змінити можна в списку нижче.`;
+    } else {
+      btn.className = 'go';
+      btn.innerHTML = `На роботі<small>${SHIFT_NAME[t.shift]} · ${fmtDM(t.date)}</small>`;
+      hint.innerHTML = `${dot}Зараз запишеться <b>${SHIFT_NAME[t.shift]} ${SHIFT_TIME[t.shift]}</b> за ${fmtDM(t.date)}. З 04:30 до 16:30 — день, з 16:30 до 04:30 — ніч.`;
+    }
+  }
+
+  function renderMonth() {
+    const { y, m } = view;
+    const n = new Date(y, m + 1, 0).getDate();
+    const todayKey = keyOf(new Date());
+    $('#monthTitle').textContent = `${MONTHS[m]} ${y}`;
+
+    let planned = 0, worked = 0, wdays = 0, html = '', cells = '';
+    const offset = (new Date(y, m, 1).getDay() + 6) % 7;
+    for (let i = 1; i <= n; i++) {
+      const d = new Date(y, m, i), k = keyOf(d);
+      const rec = state.days[k];
+      const pl = plannedFor(d);
+      const pp = state.plan[k];
+      planned += pl;
+      const isToday = k === todayKey;
+      const isFuture = k > todayKey;
+      let mark, markCls, shiftTxt, shiftCls, hrs;
+
+      if (rec && rec.shift !== 'off') {
+        const h = Number(rec.hours) || 0;
+        worked += h; wdays++;
+        mark = '✓'; markCls = 'ok'; shiftTxt = rec.shift === 'day' ? 'день' : 'ніч'; shiftCls = rec.shift; hrs = h;
+      } else if (rec && rec.shift === 'off') {
+        mark = '✕'; markCls = 'no'; shiftTxt = 'вихідний'; shiftCls = 'off'; hrs = 0;
+      } else if (isFuture || isToday) {
+        mark = '·'; markCls = 'wait'; shiftTxt = ''; shiftCls = 'off'; hrs = null;
+      } else {
+        mark = '✕'; markCls = 'no'; shiftTxt = 'вихідний'; shiftCls = 'off'; hrs = 0;
+      }
+      const wdCls = d.getDay() === 6 ? 'sat' : d.getDay() === 0 ? 'sun' : '';
+      const wk = rec && rec.shift !== 'off';
+      const missed = !wk && pp && !isFuture && !isToday;
+      cells += `<button class="cell lc ${wk ? 'w-' + rec.shift : ''} ${missed ? 'miss' : ''} ${isToday ? 'today' : ''} ${isFuture ? 'future' : ''}" data-k="${k}"><b>${i}</b>${wk ? `<strong class="${rec.shift === 'day' ? 'cd' : 'cn'}">${ic(rec.shift)} ${fmtNum(hrs)}</strong>` : missed ? '<strong class="cx">✕</strong>' : ''}${pp ? `<small>${ic(pp.shift)}${fmtNum(pl)}</small>` : ''}</button>`;
+      html += `<button class="row ${isToday ? 'today' : ''} ${isFuture ? 'future' : ''}" data-k="${k}">
+        <span class="mark ${markCls}">${mark}</span>
+        <span class="date"><b>${pad(i)}.${pad(m + 1)}</b><i class="${wdCls}">${WD[d.getDay()]}</i></span>
+        <span class="shift ${shiftCls}">${shiftTxt}</span>
+        <span class="plan ${pp ? pp.shift : ''}">${pp ? (pp.shift === 'day' ? '☀ ' : '☾ ') + fmtNum(pl) : '–'}</span>
+        <span class="hrs ${hrs ? '' : 'zero'}">${hrs === null ? '–' : fmtNum(hrs)}</span>
+      </button>`;
+    }
+    $('#list').innerHTML = html;
+    $('#calLog').innerHTML = WD_SHORT.map((w, i) => `<span class="wdh ${i > 4 ? 'we' : ''}">${w}</span>`).join('') + '<span class="empty"></span>'.repeat(offset) + cells;
+    applyLogView();
+
+    const rate = Number(state.settings.rate) || 0;
+    $('#earnedNum').textContent = Math.round(worked * rate).toLocaleString('uk-UA');
+    $('#expNum').textContent = `${Math.round(planned * rate).toLocaleString('uk-UA')} zł`;
+    $('#stWorked').textContent = fmtNum(worked);
+    $('#stPlanned').textContent = fmtNum(planned);
+    $('#stDays').textContent = wdays;
+    const pct = planned ? Math.min(100, worked / planned * 100) : 0;
+    $('#barFill').style.width = pct + '%';
+  }
+
+  function renderAll() { renderHero(); renderMonth(); }
+
+  /* ---------- toast ---------- */
+  let toastT;
+  function toast(msg) {
+    const el = $('#toast'); el.textContent = msg; el.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  /* ---------- go button ---------- */
+  $('#goBtn').addEventListener('click', () => {
+    const r = checkIn();
+    renderAll();
+    if (r.status === 'saved') {
+      view = { y: r.t.date.getFullYear(), m: r.t.date.getMonth() }; renderAll();
+      toast(`Записано: ${SHIFT_NAME[r.t.shift]} ${fmtDM(r.t.date)}`);
+    } else {
+      toast('Цю зміну вже відмічено');
+    }
+  });
+
+  /* ---------- log view toggle ---------- */
+  function applyLogView() {
+    const v = state.settings.logView === 'list' ? 'list' : 'cal';
+    $('#calWrap').hidden = v !== 'cal';
+    $('#listWrap').hidden = v !== 'list';
+    document.querySelectorAll('#vt button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  }
+  $('#vt').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    state.settings.logView = b.dataset.v; save(); applyLogView();
+  });
+
+  /* ---------- edit day ---------- */
+  let editKey = null, editShift = 'day';
+  function setSeg(s) {
+    editShift = s;
+    document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+    if (s === 'off') $('#editHours').value = 0;
+    else if (!Number($('#editHours').value)) $('#editHours').value = state.settings.hours;
+  }
+  document.querySelectorAll('#seg button').forEach(b => b.addEventListener('click', () => setSeg(b.dataset.s)));
+
+  function openEdit(k) {
+    editKey = k;
+    const d = fromKey(editKey), rec = state.days[editKey];
+    $('#editTitle').textContent = `${WD[d.getDay()]}, ${fmtDM(d)}.${d.getFullYear()}`;
+    $('#editHours').value = rec ? rec.hours : state.settings.hours;
+    setSeg(rec ? rec.shift : 'day');
+    if (rec && rec.shift === 'off') $('#editHours').value = 0;
+    $('#editScrim').classList.add('open');
+  }
+  $('#list').addEventListener('click', e => { const r = e.target.closest('.row'); if (r) openEdit(r.dataset.k); });
+  $('#calLog').addEventListener('click', e => { const c = e.target.closest('.cell'); if (c) openEdit(c.dataset.k); });
+  const closeEdit = () => $('#editScrim').classList.remove('open');
+  $('#editCancel').addEventListener('click', closeEdit);
+  $('#editScrim').addEventListener('click', e => { if (e.target.id === 'editScrim') closeEdit(); });
+  $('#editSave').addEventListener('click', () => {
+    const h = editShift === 'off' ? 0 : Math.max(0, Math.min(24, parseFloat($('#editHours').value) || 0));
+    state.days[editKey] = { shift: editShift, hours: h };
+    save(); closeEdit(); renderAll();
+  });
+  $('#editClear').addEventListener('click', () => {
+    delete state.days[editKey]; save(); closeEdit(); renderAll();
+  });
+
+  /* ---------- month nav ---------- */
+  $('#prevM').addEventListener('click', () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } renderMonth(); });
+  $('#nextM').addEventListener('click', () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } renderMonth(); });
+
+  /* ---------- settings ---------- */
+  /* застосунок вбудований у головну сторінку, тому посилання беремо з неї */
+  function parentLoc() { try { return window.parent.location; } catch (e) { return location; } }
+  function baseUrl() { return parentLoc().href.split('#')[0].split('?')[0]; }
+  $('#openSettings').addEventListener('click', () => {
+    $('#setRate').value = state.settings.rate;
+    $('#setHours').value = state.settings.hours;
+    $('#linkBox').textContent = baseUrl() + '?checkin=1';
+    $('#backupBox').value = '';
+    $('#setScrim').classList.add('open');
+  });
+  const closeSet = () => $('#setScrim').classList.remove('open');
+  $('#setClose').addEventListener('click', closeSet);
+  $('#setScrim').addEventListener('click', e => { if (e.target.id === 'setScrim') closeSet(); });
+  $('#setSave').addEventListener('click', () => {
+    state.settings.rate = parseFloat($('#setRate').value) || 0;
+    state.settings.hours = parseFloat($('#setHours').value) || 12;
+    save(); closeSet(); renderAll(); toast('Збережено');
+  });
+  $('#copyLink').addEventListener('click', async () => {
+    const link = baseUrl() + '?checkin=1';
+    try { await navigator.clipboard.writeText(link); toast('Посилання скопійовано'); }
+    catch (e) { toast('Виділи і скопіюй посилання вручну'); }
+  });
+  $('#doExport').addEventListener('click', async () => {
+    const txt = JSON.stringify(state);
+    $('#backupBox').value = txt;
+    try { await navigator.clipboard.writeText(txt); toast('Скопійовано'); } catch (e) { $('#backupBox').select(); }
+  });
+  $('#doImport').addEventListener('click', () => {
+    try {
+      const d = JSON.parse($('#backupBox').value);
+      if (!d || typeof d.days !== 'object') throw 0;
+      state = { settings: Object.assign(defaults().settings, d.settings || {}), days: d.days, plan: d.plan || {} };
+      save(); renderAll(); closeSet(); toast('Дані відновлено');
+    } catch (e) { toast('Невірні дані для відновлення'); }
+  });
+
+  /* ---------- plan tab ---------- */
+  let pv = { y: today.getFullYear(), m: today.getMonth() };
+  const sel = new Set();
+
+  function renderPlan() {
+    const { y, m } = pv;
+    const n = new Date(y, m + 1, 0).getDate();
+    const offset = (new Date(y, m, 1).getDay() + 6) % 7;
+    const todayKey = keyOf(new Date());
+    $('#pTitle').textContent = `${MONTHS[m]} ${y}`;
+    let html = WD_SHORT.map((w, i) => `<button class="wdh ${i > 4 ? 'we' : ''}" data-wd="${i}">${w}</button>`).join('');
+    for (let i = 0; i < offset; i++) html += '<span class="empty"></span>';
+    let hours = 0, cnt = 0;
+    for (let i = 1; i <= n; i++) {
+      const k = keyOf(new Date(y, m, i));
+      const p = state.plan[k];
+      if (p) { hours += Number(p.hours) || 0; cnt++; }
+      const cls = ['cell', p ? 'has ' + (p.shift === 'day' ? 'd' : 'n') : '', sel.has(k) ? 'sel' : '', k === todayKey ? 'today' : ''].join(' ');
+      html += `<button class="${cls}" data-k="${k}"><b>${i}</b>${p ? `<em class="${p.shift}">${p.shift === 'day' ? '☀' : '☾'} ${fmtNum(p.hours)}</em>` : ''}</button>`;
+    }
+    $('#cal').innerHTML = html;
+    $('#pHours').textContent = fmtNum(hours);
+    $('#pDays').textContent = cnt;
+    $('#pMoney').textContent = Math.round(hours * (Number(state.settings.rate) || 0)).toLocaleString('uk-UA');
+    updateBar();
+  }
+  function updateBar() {
+    const bar = $('#planbar');
+    const show = sel.size > 0 && !$('#viewPlan').hidden;
+    bar.classList.toggle('show', show);
+    $('#selCount').textContent = `Вибрано: ${sel.size}`;
+    if (show && !$('#planHours').value) $('#planHours').value = state.settings.hours;
+  }
+  $('#cal').addEventListener('click', e => {
+    const wd = e.target.closest('.wdh');
+    if (wd) {
+      const idx = Number(wd.dataset.wd), n = new Date(pv.y, pv.m + 1, 0).getDate();
+      const keys = [];
+      for (let i = 1; i <= n; i++) { const d = new Date(pv.y, pv.m, i); if ((d.getDay() + 6) % 7 === idx) keys.push(keyOf(d)); }
+      const all = keys.every(k => sel.has(k));
+      keys.forEach(k => all ? sel.delete(k) : sel.add(k));
+      renderPlan(); return;
+    }
+    const c = e.target.closest('.cell'); if (!c) return;
+    const k = c.dataset.k;
+    sel.has(k) ? sel.delete(k) : sel.add(k);
+    renderPlan();
+  });
+  function applyPlan(shift) {
+    const h = Math.max(0, Math.min(24, parseFloat($('#planHours').value) || Number(state.settings.hours) || 12));
+    sel.forEach(k => { if (shift === 'off') delete state.plan[k]; else state.plan[k] = { shift, hours: h }; });
+    const c = sel.size; sel.clear();
+    save(); renderPlan(); renderMonth();
+    toast(shift === 'off' ? `Прибрано з плану: ${c}` : `У плані: ${c} · ${shift === 'day' ? 'денна' : 'нічна'}`);
+  }
+  $('#planDay').addEventListener('click', () => applyPlan('day'));
+  $('#planNight').addEventListener('click', () => applyPlan('night'));
+  $('#planOff').addEventListener('click', () => applyPlan('off'));
+  $('#selClear').addEventListener('click', () => { sel.clear(); renderPlan(); });
+  $('#pPrev').addEventListener('click', () => { pv.m--; if (pv.m < 0) { pv.m = 11; pv.y--; } renderPlan(); });
+  $('#pNext').addEventListener('click', () => { pv.m++; if (pv.m > 11) { pv.m = 0; pv.y++; } renderPlan(); });
+
+  function showTab(t) {
+    $('#viewLog').hidden = t !== 'log';
+    $('#viewPlan').hidden = t !== 'plan';
+    $('#tabLog').classList.toggle('on', t === 'log');
+    $('#tabPlan').classList.toggle('on', t === 'plan');
+    if (t === 'plan') renderPlan(); else { renderAll(); updateBar(); }
+    window.scrollTo(0, 0);
+  }
+  $('#tabLog').addEventListener('click', () => showTab('log'));
+  $('#tabPlan').addEventListener('click', () => showTab('plan'));
+
+  /* ---------- opened via automation link (?checkin=1 на головній сторінці) ---------- */
+  function handleLink() {
+    const P = parentLoc();
+    const p = new URLSearchParams(P.search);
+    if (!(p.has('checkin') || P.hash === '#checkin')) return;
+    const r = checkIn();
+    try { window.parent.history.replaceState(null, '', baseUrl()); } catch (e) {}  // a reload will not record twice
+    view = { y: r.t.date.getFullYear(), m: r.t.date.getMonth() };
+    $('#cfTitle').textContent = r.status === 'saved' ? 'Записано' : 'Вже відмічено';
+    $('#cfSub').textContent = `${SHIFT_NAME[r.t.shift]} · ${fmtDM(r.t.date)}`;
+    $('#confirm').classList.add('open');
+  }
+  $('#cfClose').addEventListener('click', () => { $('#confirm').classList.remove('open'); renderAll(); });
+
+  handleLink();
+  renderAll();
+  setInterval(renderHero, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderHero(); });
+})();
+<\/script>
+</body>
+</html>
+</script>
 
 <script>
 const $=s=>document.querySelector(s);
@@ -625,7 +1323,7 @@ function renderAll(){renderHero();renderList();renderStats();renderFuel();render
 function openPage(n){
   if(n!=='timer')stopTimer();
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('open',p.id==='p-'+n));
-  $('#p-'+n).scrollTop=0;renderAll();if(n==='rem')loadRems();if(n==='train')openTrain();
+  $('#p-'+n).scrollTop=0;renderAll();if(n==='rem')loadRems();if(n==='train')openTrain();if(n==='work')openWork();
 }
 function closePage(){stopTimer();document.querySelectorAll('.page').forEach(p=>p.classList.remove('open'));renderHero()}
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPage(b.dataset.page));
@@ -1370,6 +2068,16 @@ window.addEventListener('message',e=>{
   }
 });
 
+/* ---------- Робота (вбудований Grafik praca) ---------- */
+let WORK_HTML=null;
+function openWork(){
+  const f=$('#workFrame');
+  if(f.getAttribute('srcdoc'))return;
+  WORK_HTML=document.getElementById('workTpl').textContent.replace(/<\\\/script>/g,'<\/script>');
+  f.srcdoc=WORK_HTML;
+}
+$('#aWork').onclick=()=>openPage('work');
+
 /* ---------- AI-агент: керування всім додатком ---------- */
 const trBase=()=>({profile:{},workouts:[],weights:[],meals:[],nutrition:null,plans:[],chat:[]});
 function trData(){
@@ -1521,7 +2229,7 @@ const AI_TOOLS=[
   },
   desc:a=>'Налаштування: '+[a.daily_limit!=null&&'денний ліміт '+a.daily_limit,a.currency&&'валюта '+a.currency,a.pay_day&&'день зарплати '+a.pay_day].filter(Boolean).join(', ')},
  {name:'open_page',description:'Відкрити розділ додатка.',
-  parameters:{type:'object',properties:{page:{type:'string',enum:['list','stats','fuel','train','rem','set']}},required:['page']},
+  parameters:{type:'object',properties:{page:{type:'string',enum:['list','stats','fuel','train','work','rem','set']}},required:['page']},
   run(a,ctx){ctx.nav=a.page;return {ok:true}}}
 ];
 function agentPrompt(){
@@ -1736,6 +2444,9 @@ $('#aAI').onclick=()=>{
 
 fillCur();initSb();loadSettings();renderAll();
 store.set('sp.cfg',JSON.stringify(cfg));
+
+/* посилання автоматизації ?checkin=1 відкриває «Роботу» й відмічає зміну */
+if(/[?&]checkin(=|&|$)/.test(location.search)||location.hash==='#checkin')openPage('work');
 </script>
 </body>
 </html>
