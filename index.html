@@ -94,6 +94,8 @@ svg{display:block}
 .ico{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:rgba(140,125,255,.15);color:var(--acc)}
 .ico svg{width:19px;height:19px}
 .act small{font-size:10.5px;font-weight:600;color:var(--faint);margin-top:-3px}
+.act.glovo{border-color:rgba(255,194,68,.55);background:linear-gradient(135deg,rgba(255,194,68,.14),rgba(255,194,68,.03))}
+.act.glovo .ico{background:rgba(255,194,68,.18);color:#ffc244}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .tile{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:11px 4px;min-height:66px;border-radius:16px;
@@ -195,11 +197,11 @@ h2:first-child{margin-top:0}
 .chip{padding:8px 11px;border-radius:10px;border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--faint)}
 .chip.on{background:rgba(140,125,255,.18);color:var(--acc);border-color:var(--acc)}
 
-/* trainer + work pages (iframe) */
-#p-train,#p-work{overflow:hidden}
-#p-train.open,#p-work.open{display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
-#p-train .pg-h,#p-work .pg-h{flex:none}
-#trainFrame,#workFrame{flex:1;min-height:0;width:100%;border:0;background:var(--bg);display:block}
+/* trainer + work + glovo pages (iframe) */
+#p-train,#p-work,#p-glovo{overflow:hidden}
+#p-train.open,#p-work.open,#p-glovo.open{display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+#p-train .pg-h,#p-work .pg-h,#p-glovo .pg-h{flex:none}
+#trainFrame,#workFrame,#glovoFrame{flex:1;min-height:0;width:100%;border:0;background:var(--bg);display:block}
 
 /* sheet */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:flex-end;justify-content:center;z-index:20}
@@ -265,7 +267,7 @@ h2:first-child{margin-top:0}
 
   <section class="actions">
     <button class="act" id="aManual"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Вручну</button>
-    <button class="act" id="aVoice"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>Голос<small>Gemini</small></button>
+    <button class="act glovo" id="aGlovo" aria-label="Glovo: облік зміни"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span>Glovo<small>Зміна</small></button>
     <button class="act" id="aPhoto"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>Фото<small>Gemini</small></button>
   </section>
   <input type="file" id="file" accept="image/*" multiple hidden>
@@ -327,6 +329,10 @@ h2:first-child{margin-top:0}
   <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Робота</h1></div>
   <iframe id="workFrame" title="Графік роботи"></iframe>
 </section>
+<section class="page" id="p-glovo">
+  <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Glovo</h1></div>
+  <iframe id="glovoFrame" title="Облік зміни Glovo" allow="camera"></iframe>
+</section>
 <section class="page" id="p-rem">
   <div class="pg-h"><button class="back" data-back aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button><h1>Нагадування</h1></div>
   <div class="pg">
@@ -359,7 +365,7 @@ h2:first-child{margin-top:0}
     <h2>Gemini AI</h2>
     <label class="f"><span>API ключ</span>
       <input type="password" id="sKey" autocomplete="off" placeholder="AIza...">
-      <div class="hint">Ключ зберігається лише в цьому браузері й на сервер не передається. Отримати його можна в Google AI Studio.</div>
+      <div class="hint">Ключ зберігається лише в цьому браузері й на сервер не передається. Отримати його можна в Google AI Studio. Цей самий ключ використовує і розділ Glovo для розпізнавання одометра.</div>
     </label>
     <label class="f"><span>Модель</span>
       <input id="sModel" list="models" placeholder="gemini-3.8-flash">
@@ -411,6 +417,443 @@ h2:first-child{margin-top:0}
 </section>
 <div class="ov" id="ov" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast" role="status"></div>
+
+<!-- Вбудований застосунок «Glovo — облік зміни» (відкривається кнопкою Glovo на головній).
+     Закриваючий тег script всередині записано як <\/script> і відновлюється при запуску. -->
+<script type="text/html" id="glovoTpl">
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080612">
+<title>Зміна — облік Glovo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080612; --surface:#110C20; --ink:#EDEBFF; --muted:#9A92C4; --line:#2A2150; --field:#0B0818;
+  --cyan:#22F3FF; --pink:#FF2BD6; --lime:#B8FF3B; --red:#FF5C7A;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;margin:0;min-width:0}
+html,body{max-width:100%;overflow-x:hidden}
+html{-webkit-text-size-adjust:100%}
+body{font-family:"Chakra Petch",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh;padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  background-image:radial-gradient(120% 60% at 100% 0%, rgba(255,43,214,.16), transparent 60%),radial-gradient(100% 50% at 0% 100%, rgba(34,243,255,.12), transparent 60%);
+  background-attachment:fixed}
+header{padding:calc(16px + env(safe-area-inset-top)) 18px 14px;border-bottom:1px solid var(--cyan);box-shadow:0 0 18px rgba(34,243,255,.35)}
+header h1{font-size:1.5rem;font-weight:700;letter-spacing:.02em;color:var(--cyan);text-shadow:0 0 6px var(--cyan),0 0 18px rgba(34,243,255,.7)}
+header p{font-size:.85rem;margin-top:2px;color:var(--muted)}
+main{width:100%;max-width:560px;margin:0 auto;padding:14px}
+.view{display:none}.view.active{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:var(--pink);text-shadow:0 0 8px rgba(255,43,214,.7)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:5px}
+input{display:block;width:100%;max-width:100%;font:inherit;font-size:1.05rem;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:46px;-webkit-appearance:none;appearance:none;color-scheme:dark}
+input::placeholder{color:#5D5588}
+input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 14px rgba(34,243,255,.55)}
+input[type=date],input[type=time]{text-align:left}
+.field{margin-bottom:12px}
+.km-line{display:flex;gap:8px}
+.km-line input{flex:1 1 0}
+.photo{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 12px;margin:0;border-radius:10px;background:transparent;color:var(--lime);border:1px solid var(--lime);box-shadow:0 0 10px rgba(184,255,59,.45),inset 0 0 8px rgba(184,255,59,.15);font-weight:600;cursor:pointer;font-size:.9rem;gap:6px;position:relative}
+.photo:active{background:rgba(184,255,59,.15)}
+.photo input{position:absolute;opacity:0;width:1px;height:1px;min-height:0;padding:0}
+.photo:focus-within{outline:2px solid var(--lime);outline-offset:2px}
+button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.hint{font-size:.8rem;color:var(--muted);margin-top:5px;min-height:1.1em;overflow-wrap:anywhere}
+.hint.err{color:var(--red)}.hint.ok{color:var(--lime)}
+.spinner{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spinner{animation-duration:2.4s}}
+
+/* чек */
+.receipt{background:var(--surface);border:1px solid var(--pink);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 0 16px rgba(255,43,214,.4),inset 0 0 18px rgba(255,43,214,.08)}
+.receipt h2{margin-bottom:6px}
+.meta{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.95rem;padding:6px 0}
+.meta span:first-child{color:var(--muted);overflow-wrap:anywhere}
+.meta b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;flex:0 0 auto}
+.sep{border:0;border-top:1px dashed var(--line);margin:8px 0}
+.minus b{color:var(--red)}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.total span{font-weight:600;font-size:1.1rem}
+.total b{font-size:2.2rem;font-weight:700;color:var(--lime);text-shadow:0 0 8px var(--lime),0 0 24px rgba(184,255,59,.6);font-variant-numeric:tabular-nums;white-space:nowrap}
+.total b.neg{color:var(--red);text-shadow:0 0 8px var(--red),0 0 24px rgba(255,92,122,.6)}
+.sub{font-size:.85rem;color:var(--cyan);text-align:right;margin-top:2px}
+
+button{font:inherit;cursor:pointer}
+.btn{width:100%;min-height:50px;border:1px solid var(--cyan);border-radius:12px;background:rgba(34,243,255,.1);color:var(--cyan);font-weight:700;font-size:1.05rem;letter-spacing:.03em;text-shadow:0 0 8px rgba(34,243,255,.8);box-shadow:0 0 14px rgba(34,243,255,.5),inset 0 0 12px rgba(34,243,255,.15)}
+.btn:active{background:rgba(34,243,255,.25)}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);box-shadow:none;text-shadow:none;margin-top:10px;font-weight:600}
+.btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;text-shadow:none}
+
+/* історія */
+.totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.totals div{background:var(--surface);border:1px solid var(--cyan);border-radius:10px;padding:10px;box-shadow:0 0 10px rgba(34,243,255,.25)}
+.totals small{display:block;color:var(--muted);font-size:.75rem}
+.totals b{font-size:1.05rem;font-variant-numeric:tabular-nums;color:var(--cyan);overflow-wrap:anywhere}
+.item{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--lime);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.item-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.item-top b{font-size:1.15rem;color:var(--lime);text-shadow:0 0 8px rgba(184,255,59,.6);font-variant-numeric:tabular-nums;white-space:nowrap}
+.item-sub{color:var(--muted);font-size:.85rem;margin-top:3px;overflow-wrap:anywhere}
+.del{background:none;border:0;color:var(--red);font-size:.85rem;padding:6px 0;margin-top:4px;min-height:36px}
+.empty{text-align:center;color:var(--muted);padding:34px 10px}
+
+/* навігація */
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,6,18,.94);border-top:1px solid var(--pink);box-shadow:0 0 16px rgba(255,43,214,.4);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1 1 0;border:0;background:none;color:var(--muted);padding:12px 2px;font-weight:600;font-size:.9rem;min-height:54px;border-top:3px solid transparent}
+nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);text-shadow:0 0 8px var(--pink)}
+.note{font-size:.8rem;color:var(--muted);line-height:1.45;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Моя зміна</h1>
+  <p>Кілометраж, чистий заробіток після податку і пального</p>
+</header>
+
+<main>
+  <!-- ЗМІНА -->
+  <section class="view active" id="view-shift">
+    <div class="card">
+      <h2>Дані зміни</h2>
+      <div class="field">
+        <label for="date">Дата</label>
+        <input type="date" id="date">
+      </div>
+
+      <div class="field">
+        <label for="kmStart">Кілометраж на початок, км</label>
+        <div class="km-line">
+          <input type="number" id="kmStart" inputmode="decimal" step="0.1" placeholder="напр. 48210">
+          <label class="photo" title="Сфотографувати одометр">📷 Фото
+            <input type="file" accept="image/*" capture="environment" data-target="kmStart">
+          </label>
+        </div>
+        <div class="hint" id="hint-kmStart"></div>
+      </div>
+
+      <div class="field">
+        <label for="kmEnd">Кілометраж на кінець, км</label>
+        <div class="km-line">
+          <input type="number" id="kmEnd" inputmode="decimal" step="0.1" placeholder="напр. 48395">
+          <label class="photo" title="Сфотографувати одометр">📷 Фото
+            <input type="file" accept="image/*" capture="environment" data-target="kmEnd">
+          </label>
+        </div>
+        <div class="hint" id="hint-kmEnd"></div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="tStart">Початок зміни</label>
+          <input type="time" id="tStart">
+        </div>
+        <div class="field">
+          <label for="tEnd">Кінець зміни</label>
+          <input type="time" id="tEnd">
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:0">
+        <label for="gross">Сума брудними, zł</label>
+        <input type="number" id="gross" inputmode="decimal" step="0.01" placeholder="напр. 420">
+      </div>
+    </div>
+
+    <div class="receipt" aria-live="polite">
+      <h2>Звіт за зміну</h2>
+      <div class="meta"><span>Пройдено</span><b id="r-km">—</b></div>
+      <div class="meta"><span>Тривалість</span><b id="r-hours">—</b></div>
+      <hr class="sep">
+      <div class="meta"><span>Брудними</span><b id="r-gross">—</b></div>
+      <div class="meta minus"><span id="r-tax-l">Податок</span><b id="r-tax">—</b></div>
+      <div class="meta"><span>Після податку</span><b id="r-aftertax">—</b></div>
+      <div class="meta minus"><span id="r-fuel-l">Пальне</span><b id="r-fuel">—</b></div>
+      <hr class="sep">
+      <div class="total"><span>Чистими</span><b id="r-net">—</b></div>
+      <div class="sub" id="r-perhour"></div>
+    </div>
+
+    <button class="btn" id="save" disabled>Зберегти зміну</button>
+    <button class="btn ghost" id="clear">Очистити форму</button>
+  </section>
+
+  <!-- ІСТОРІЯ -->
+  <section class="view" id="view-history">
+    <div class="totals">
+      <div><small>Км</small><b id="t-km">0</b></div>
+      <div><small>Годин</small><b id="t-h">0</b></div>
+      <div><small>Чистими</small><b id="t-net">0</b></div>
+    </div>
+    <div id="list"></div>
+    <button class="btn ghost" id="csv">Завантажити CSV</button>
+  </section>
+
+  <!-- НАЛАШТУВАННЯ -->
+  <section class="view" id="view-settings">
+    <div class="card">
+      <h2>Розпізнавання одометра</h2>
+      <div class="field">
+        <label for="apiKey">API-ключ Gemini</label>
+        <input type="password" id="apiKey" autocomplete="off" placeholder="порожньо = ключ з налаштувань додатка">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="model">Назва моделі</label>
+        <input type="text" id="model" placeholder="порожньо = модель з налаштувань додатка" autocapitalize="off" autocorrect="off">
+      </div>
+      <p class="note">Якщо залишити поля порожніми, береться ключ і модель Gemini з основних налаштувань додатка. Ключ зберігається лише в цьому браузері й надсилається тільки в Google для розпізнавання фото.</p>
+    </div>
+
+    <div class="card">
+      <h2>Гроші й пальне</h2>
+      <div class="field">
+        <label for="price">Ціна пального, zł за літр</label>
+        <input type="number" id="price" inputmode="decimal" step="0.01" placeholder="напр. 6.20">
+      </div>
+      <div class="field">
+        <label for="cons">Середня витрата, л на 100 км</label>
+        <input type="number" id="cons" inputmode="decimal" step="0.1" placeholder="напр. 6.5">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="tax">Податок, %</label>
+        <input type="number" id="tax" inputmode="decimal" step="0.1" placeholder="28">
+      </div>
+    </div>
+    <div class="hint ok" id="saved-hint"></div>
+  </section>
+</main>
+
+<nav role="tablist">
+  <button role="tab" aria-selected="true" data-view="shift">Зміна</button>
+  <button role="tab" aria-selected="false" data-view="history">Історія</button>
+  <button role="tab" aria-selected="false" data-view="settings">Налаштування</button>
+</nav>
+
+<script>
+(() => {
+  // ---------- сховище (з запасним варіантом, якщо localStorage недоступний) ----------
+  const mem = {};
+  const store = {
+    get(k){ try { return localStorage.getItem(k); } catch(e){ return mem[k] ?? null; } },
+    set(k,v){ try { localStorage.setItem(k,v); } catch(e){ mem[k] = v; } }
+  };
+  const $ = id => document.getElementById(id);
+
+  const defaults = { apiKey:'', model:'', price:'', cons:'', tax:'28' };
+  let settings = { ...defaults, ...JSON.parse(store.get('gz_settings') || '{}') };
+  if (/^gemini-2\./.test(settings.model || '')) settings.model = ''; // застарілі моделі: беремо модель основного додатка
+  let shifts = JSON.parse(store.get('gz_shifts') || '[]');
+
+  // ключ і модель Gemini з основного додатка
+  const host = () => { try { return window.parent.glovoGemini() || {}; } catch(e){ return {}; } };
+
+  // ---------- форматування ----------
+  const nf = (n, d=2) => n.toLocaleString('uk-UA', { minimumFractionDigits:d, maximumFractionDigits:d });
+  const zl = n => (n < 0 ? '−' : '') + nf(Math.abs(n)) + ' zł';
+  const num = id => { const v = parseFloat(String($(id).value).replace(',', '.')); return isNaN(v) ? null : v; };
+  const hm = min => `${Math.floor(min/60)} год ${String(min%60).padStart(2,'0')} хв`;
+
+  // ---------- вкладки ----------
+  document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(x => x.setAttribute('aria-selected', x === b));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    $('view-' + b.dataset.view).classList.add('active');
+    window.scrollTo(0,0);
+    if (b.dataset.view === 'history') renderHistory();
+  }));
+
+  // ---------- налаштування ----------
+  ['apiKey','model','price','cons','tax'].forEach(k => {
+    $(k).value = settings[k] ?? '';
+    $(k).addEventListener('input', () => {
+      settings[k] = $(k).value.trim();
+      store.set('gz_settings', JSON.stringify(settings));
+      $('saved-hint').textContent = 'Збережено';
+      calc();
+    });
+  });
+
+  // ---------- форма ----------
+  const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+  $('date').value = today();
+  const lastEnd = shifts.length ? shifts[0].kmEnd : null;
+  if (lastEnd != null) { $('kmStart').value = lastEnd; $('hint-kmStart').textContent = 'Підставлено кінець попередньої зміни'; }
+
+  ['date','kmStart','kmEnd','tStart','tEnd','gross'].forEach(id => $(id).addEventListener('input', calc));
+
+  function calc(){
+    const ks = num('kmStart'), ke = num('kmEnd'), g = num('gross');
+    const ts = $('tStart').value, te = $('tEnd').value;
+    const taxP = parseFloat(settings.tax) || 0;
+    const price = parseFloat(String(settings.price).replace(',', '.')) || 0;
+    const cons = parseFloat(String(settings.cons).replace(',', '.')) || 0;
+
+    const km = (ks != null && ke != null) ? ke - ks : null;
+    let mins = null;
+    if (ts && te) { const [a,b] = ts.split(':').map(Number), [c,d] = te.split(':').map(Number); mins = ((c*60+d) - (a*60+b) + 1440) % 1440; }
+
+    $('r-km').textContent = km != null ? nf(km, 1) + ' км' : '—';
+    $('r-hours').textContent = mins != null ? hm(mins) : '—';
+    $('r-gross').textContent = g != null ? zl(g) : '—';
+    $('r-tax-l').textContent = `Податок ${nf(taxP, taxP % 1 ? 1 : 0)}%`;
+    $('r-fuel-l').textContent = cons && price ? `Пальне (${nf(cons,1)} л/100 км × ${nf(price)} zł)` : 'Пальне';
+
+    $('hint-kmEnd').classList.remove('err');
+    if (km != null && km < 0) { $('hint-kmEnd').textContent = 'Кінець менший за початок — перевір цифри'; $('hint-kmEnd').classList.add('err'); }
+
+    let res = null;
+    if (g != null && km != null && km >= 0) {
+      const tax = g * taxP / 100, after = g - tax;
+      const fuel = km * cons / 100 * price;
+      res = { tax, after, fuel, net: after - fuel };
+      $('r-tax').textContent = '−' + nf(tax) + ' zł';
+      $('r-aftertax').textContent = zl(after);
+      $('r-fuel').textContent = '−' + nf(fuel) + ' zł';
+      $('r-net').textContent = zl(res.net);
+      $('r-net').classList.toggle('neg', res.net < 0);
+      $('r-perhour').textContent = mins ? `${nf(res.net / (mins/60))} zł чистими за годину` : '';
+    } else {
+      ['r-tax','r-aftertax','r-fuel','r-net'].forEach(i => $(i).textContent = '—');
+      $('r-net').classList.remove('neg');
+      $('r-perhour').textContent = '';
+    }
+    $('save').disabled = !res || mins == null;
+    calc.last = res ? { km, mins, g, taxP, price, cons, ...res } : null;
+  }
+
+  $('save').addEventListener('click', () => {
+    const r = calc.last; if (!r) return;
+    shifts.unshift({
+      id: Date.now(), date: $('date').value, kmStart: num('kmStart'), kmEnd: num('kmEnd'),
+      tStart: $('tStart').value, tEnd: $('tEnd').value, ...r
+    });
+    store.set('gz_shifts', JSON.stringify(shifts));
+    const keepEnd = num('kmEnd');
+    resetForm(keepEnd);
+    document.querySelector('nav button[data-view="history"]').click();
+  });
+
+  function resetForm(nextStart){
+    ['kmStart','kmEnd','tStart','tEnd','gross'].forEach(i => $(i).value = '');
+    if (nextStart != null) { $('kmStart').value = nextStart; $('hint-kmStart').textContent = 'Підставлено кінець попередньої зміни'; }
+    else $('hint-kmStart').textContent = '';
+    $('hint-kmEnd').textContent = '';
+    $('date').value = today();
+    calc();
+  }
+  $('clear').addEventListener('click', () => resetForm(null));
+
+  // ---------- історія ----------
+  function renderHistory(){
+    const list = $('list');
+    if (!shifts.length) {
+      list.innerHTML = '<div class="empty">Збережених змін ще немає.<br>Заповни форму на вкладці «Зміна» і збережи її.</div>';
+    } else {
+      list.innerHTML = shifts.map(s => `
+        <div class="item">
+          <div class="item-top"><span>${fmtDate(s.date)}</span><b>${zl(s.net)}</b></div>
+          <div class="item-sub">${nf(s.km,1)} км · ${hm(s.mins)} · брудними ${zl(s.g)}</div>
+          <div class="item-sub">${s.tStart}–${s.tEnd} · пальне ${nf(s.fuel)} zł</div>
+          <button class="del" data-id="${s.id}">Видалити</button>
+        </div>`).join('');
+    }
+    const km = shifts.reduce((a,s)=>a+s.km,0), mins = shifts.reduce((a,s)=>a+s.mins,0), net = shifts.reduce((a,s)=>a+s.net,0);
+    $('t-km').textContent = nf(km,0);
+    $('t-h').textContent = nf(mins/60,1);
+    $('t-net').textContent = nf(net,0) + ' zł';
+  }
+  const fmtDate = d => { const [y,m,dd] = d.split('-'); return `${dd}.${m}.${y}`; };
+
+  $('list').addEventListener('click', e => {
+    const b = e.target.closest('.del'); if (!b) return;
+    if (!confirm('Видалити цю зміну?')) return;
+    shifts = shifts.filter(s => String(s.id) !== b.dataset.id);
+    store.set('gz_shifts', JSON.stringify(shifts));
+    renderHistory();
+  });
+
+  $('csv').addEventListener('click', () => {
+    if (!shifts.length) return;
+    const head = ['Дата','Початок','Кінець','Км старт','Км кінець','Км','Хвилин','Брудними','Податок','Пальне','Чистими'];
+    const rows = shifts.map(s => [s.date,s.tStart,s.tEnd,s.kmStart,s.kmEnd,s.km.toFixed(1),s.mins,s.g.toFixed(2),s.tax.toFixed(2),s.fuel.toFixed(2),s.net.toFixed(2)].join(';'));
+    const blob = new Blob(['\ufeff' + [head.join(';'), ...rows].join('\n')], { type:'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'glovo-zminy.csv'; a.click();
+  });
+
+  // ---------- розпізнавання одометра (Gemini) ----------
+  document.querySelectorAll('input[type=file]').forEach(inp => inp.addEventListener('change', async () => {
+    const file = inp.files[0]; inp.value = '';
+    if (!file) return;
+    const target = inp.dataset.target, hint = $('hint-' + target);
+    hint.className = 'hint';
+    if (!(settings.apiKey || host().key)) { hint.textContent = 'Додай API-ключ Gemini в налаштуваннях додатка'; hint.classList.add('err'); return; }
+    hint.innerHTML = '<span class="spinner"></span>Розпізнаю одометр…';
+    try {
+      const b64 = await shrink(file, 1280);
+      const value = await readOdometer(b64);
+      $(target).value = value;
+      hint.textContent = 'Розпізнано: ' + nf(value, value % 1 ? 1 : 0) + ' км. Перевір, чи збігається з фото';
+      hint.classList.add('ok');
+      calc();
+    } catch (err) {
+      hint.textContent = err.message; hint.classList.add('err');
+    }
+  }));
+
+  function shrink(file, max){
+    return new Promise((resolve, reject) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const k = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+      };
+      img.onerror = () => reject(new Error('Не вдалося відкрити фото'));
+      img.src = url;
+    });
+  }
+
+  async function readOdometer(b64){
+    const h = host();
+    const key = settings.apiKey || h.key;
+    const model = (settings.model || h.model || 'gemini-3.8-flash').trim();
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const prompt = 'На фото одометр транспортного засобу. Знайди загальний пробіг (odometer, не добовий trip). ' +
+      'Відповідь — лише число в кілометрах без пробілів, одиниць і пояснень. Якщо пробіг не видно, відповідай NONE.';
+    let resp;
+    try {
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: 'image/jpeg', data: b64 } }] }],
+          generationConfig: { temperature: 0 }
+        })
+      });
+    } catch (e) { throw new Error('Немає зв’язку з Gemini. Перевір інтернет'); }
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const msg = data?.error?.message || ('Помилка ' + resp.status);
+      throw new Error('Gemini: ' + msg + (resp.status === 404 ? ' Перевір назву моделі в налаштуваннях' : ''));
+    }
+    const text = (data?.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
+    const m = text.replace(/[\s,]/g, '').match(/\d+(\.\d+)?/);
+    if (!m) throw new Error('Не вдалося прочитати пробіг. Сфотографуй ближче й без відблисків або введи вручну');
+    return parseFloat(m[0]);
+  }
+
+  calc();
+})();
+<\/script>
+</body>
+</html>
+</script>
 
 <!-- Вбудований застосунок «Grafik praca» (відкривається у вкладці «Робота»).
      Закриваючий тег script всередині записано як <\/script> і відновлюється при запуску. -->
@@ -1274,6 +1717,9 @@ const saveTx=()=>{store.set('sp.tx',JSON.stringify(tx));touch()};
 const saveFuel=()=>{store.set('sp.fuel',JSON.stringify(fuel));touch()};
 const saveCfg=shared=>{store.set('sp.cfg',JSON.stringify(cfg));if(shared)touch()};
 
+/* ключ і модель Gemini для вбудованого Glovo */
+window.glovoGemini=()=>({key:cfg.key,model:cfg.model});
+
 /* ---------- sync із сервером ---------- */
 const snapshot=()=>({v:1,updatedAt:meta.updatedAt,tx,fuel,settings:{cur:cfg.cur,oilLast:cfg.oilLast,oilInt:cfg.oilInt,payDay:cfg.payDay,dayLimit:cfg.dayLimit,limitFrom:cfg.limitFrom},trainer:trainerData});
 function applyState(s){
@@ -1479,7 +1925,7 @@ function renderAll(){renderHero();renderList();renderStats();renderFuel();render
 function openPage(n){
   if(n!=='timer')stopTimer();
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('open',p.id==='p-'+n));
-  $('#p-'+n).scrollTop=0;renderAll();if(n==='rem')loadRems();if(n==='train')openTrain();if(n==='work')openWork();
+  $('#p-'+n).scrollTop=0;renderAll();if(n==='rem')loadRems();if(n==='train')openTrain();if(n==='work')openWork();if(n==='glovo')openGlovo();
 }
 function closePage(){stopTimer();document.querySelectorAll('.page').forEach(p=>p.classList.remove('open'));renderHero()}
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPage(b.dataset.page));
@@ -2313,6 +2759,16 @@ function openWork(){
 }
 $('#aWork').onclick=()=>openPage('work');
 
+/* ---------- Glovo (вбудований облік зміни) ---------- */
+let GLOVO_HTML=null;
+function openGlovo(){
+  const f=$('#glovoFrame');
+  if(f.getAttribute('srcdoc'))return;
+  GLOVO_HTML=document.getElementById('glovoTpl').textContent.replace(/<\\\/script>/g,'<\/script>');
+  f.srcdoc=GLOVO_HTML;
+}
+$('#aGlovo').onclick=()=>openPage('glovo');
+
 /* ---------- AI-агент: керування всім додатком ---------- */
 const trBase=()=>({profile:{},workouts:[],weights:[],meals:[],nutrition:null,plans:[],chat:[]});
 function trData(){
@@ -2464,7 +2920,7 @@ const AI_TOOLS=[
   },
   desc:a=>'Налаштування: '+[a.daily_limit!=null&&'денний ліміт '+a.daily_limit,a.currency&&'валюта '+a.currency,a.pay_day&&'день зарплати '+a.pay_day].filter(Boolean).join(', ')},
  {name:'open_page',description:'Відкрити розділ додатка.',
-  parameters:{type:'object',properties:{page:{type:'string',enum:['list','stats','fuel','train','work','rem','set']}},required:['page']},
+  parameters:{type:'object',properties:{page:{type:'string',enum:['list','stats','fuel','train','work','glovo','rem','set']}},required:['page']},
   run(a,ctx){ctx.nav=a.page;return {ok:true}}}
 ];
 function agentPrompt(){
@@ -2664,10 +3120,6 @@ $('#list').onclick=e=>{
 
 /* entry points */
 $('#aManual').onclick=()=>openSheet({mode:'review',title:'Нова операція',drafts:[blank()]});
-$('#aVoice').onclick=()=>{
-  if(!cfg.key)toast('Додайте API ключ Gemini у налаштуваннях',true);
-  openSheet({mode:'voice',purpose:'tx'});
-};
 $('#aPhoto').onclick=()=>{
   if(!cfg.key)return toast('Додайте API ключ Gemini у налаштуваннях',true);
   openSheet({mode:'photos',imgs:[]});
@@ -2686,3 +3138,4 @@ if(/[?&]checkin(=|&|$)/.test(location.search)||location.hash==='#checkin')openPa
 </script>
 </body>
 </html>
+</document_content>
