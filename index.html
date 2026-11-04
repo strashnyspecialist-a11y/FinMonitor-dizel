@@ -96,6 +96,16 @@ svg{display:block}
 .act small{font-size:10.5px;font-weight:600;color:var(--faint);margin-top:-3px}
 .act.glovo{border-color:rgba(255,194,68,.55);background:linear-gradient(135deg,rgba(255,194,68,.14),rgba(255,194,68,.03))}
 .act.glovo .ico{background:rgba(255,194,68,.18);color:#ffc244}
+.glw{display:block;width:100%;text-align:left;border-radius:18px;padding:11px 14px 12px;border:1.5px solid rgba(255,194,68,.55);background:linear-gradient(135deg,rgba(255,194,68,.16),rgba(255,194,68,.03));transition:transform .1s}
+.glw:active{transform:scale(.98)}
+.glw-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;font-weight:700;color:#ffc244}
+.glw-h small{color:var(--mut);font-size:11px;font-weight:600}
+.glw-net{font-size:30px;font-weight:800;line-height:1.15;color:var(--g);text-shadow:var(--glow-g);white-space:nowrap;font-variant-numeric:tabular-nums;margin:2px 0 8px}
+.glw-net.neg{color:var(--r);text-shadow:var(--glow-r)}
+.glw-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.glw-g div{background:rgba(9,9,12,.55);border:1px solid var(--line);border-radius:12px;padding:7px 9px;min-width:0}
+.glw-g span{display:block;font-size:10.5px;color:var(--mut);font-weight:700}
+.glw-g b{display:block;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .tile{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:11px 4px;min-height:66px;border-radius:16px;
@@ -264,6 +274,16 @@ h2:first-child{margin-top:0}
     <button class="aibar" id="aAI" aria-label="AI-асистент"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="tx"><b>AI-асистент</b><small>Голос або текст</small></span></button>
     <button class="workbtn" id="aWork" aria-label="Робота: графік"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg></span><span class="tx"><b>Робота</b><small>Графік</small></span></button>
   </section>
+
+  <button class="glw" id="glw" type="button" aria-label="Glovo: підсумок тижня">
+    <div class="glw-h"><span>Glovo · цей тиждень</span><small id="glwRange"></small></div>
+    <div class="glw-net" id="glwNet">—</div>
+    <div class="glw-g">
+      <div><span>Чистими / год</span><b id="glwPh">—</b></div>
+      <div><span>Годин</span><b id="glwH">—</b></div>
+      <div><span>Км</span><b id="glwKm">—</b></div>
+    </div>
+  </button>
 
   <section class="actions">
     <button class="act" id="aManual"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Вручну</button>
@@ -501,6 +521,18 @@ button{font:inherit;cursor:pointer}
 .item-sub{color:var(--muted);font-size:.85rem;margin-top:3px;overflow-wrap:anywhere}
 .del{background:none;border:0;color:var(--red);font-size:.85rem;padding:6px 0;margin-top:4px;min-height:36px}
 .empty{text-align:center;color:var(--muted);padding:34px 10px}
+.useg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.useg button{min-height:42px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--muted);font-weight:600}
+.useg button.on{border-color:var(--pink);color:var(--pink);box-shadow:0 0 10px rgba(255,43,214,.4);text-shadow:0 0 8px var(--pink)}
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.pnav button{width:44px;min-height:40px;border:1px solid var(--cyan);border-radius:10px;background:transparent;color:var(--cyan);font-size:1.3rem;font-weight:700}
+.pnav button:disabled{opacity:.3}
+.pnav span{font-weight:600;text-align:center;flex:1;text-transform:capitalize}
+.phcard h2{margin-bottom:10px}
+.phrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.phrow div{border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+.phrow small{display:block;color:var(--muted);font-size:.75rem;margin-bottom:2px}
+.phrow b{font-size:1rem;color:var(--lime);text-shadow:0 0 8px rgba(184,255,59,.5);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 
 /* навігація */
 nav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,6,18,.94);border-top:1px solid var(--pink);box-shadow:0 0 16px rgba(255,43,214,.4);display:flex;padding-bottom:env(safe-area-inset-bottom)}
@@ -529,8 +561,8 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
         <label for="kmStart">Кілометраж на початок, км</label>
         <div class="km-line">
           <input type="number" id="kmStart" inputmode="decimal" step="0.1" placeholder="напр. 48210">
-          <label class="photo" title="Сфотографувати одометр">📷 Фото
-            <input type="file" accept="image/*" capture="environment" data-target="kmStart">
+          <label class="photo" title="Сфотографувати або обрати з галереї">📷 Фото
+            <input type="file" accept="image/*" data-target="kmStart">
           </label>
         </div>
         <div class="hint" id="hint-kmStart"></div>
@@ -540,8 +572,8 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
         <label for="kmEnd">Кілометраж на кінець, км</label>
         <div class="km-line">
           <input type="number" id="kmEnd" inputmode="decimal" step="0.1" placeholder="напр. 48395">
-          <label class="photo" title="Сфотографувати одометр">📷 Фото
-            <input type="file" accept="image/*" capture="environment" data-target="kmEnd">
+          <label class="photo" title="Сфотографувати або обрати з галереї">📷 Фото
+            <input type="file" accept="image/*" data-target="kmEnd">
           </label>
         </div>
         <div class="hint" id="hint-kmEnd"></div>
@@ -584,10 +616,39 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
 
   <!-- ІСТОРІЯ -->
   <section class="view" id="view-history">
+    <div class="useg" id="h-seg" role="group" aria-label="Період">
+      <button data-u="day">День</button>
+      <button data-u="week">Тиждень</button>
+      <button data-u="month">Місяць</button>
+    </div>
+    <div class="pnav">
+      <button id="h-prev" aria-label="Попередній період">‹</button>
+      <span id="h-label"></span>
+      <button id="h-next" aria-label="Наступний період">›</button>
+    </div>
     <div class="totals">
       <div><small>Км</small><b id="t-km">0</b></div>
       <div><small>Годин</small><b id="t-h">0</b></div>
       <div><small>Чистими</small><b id="t-net">0</b></div>
+    </div>
+    <div class="receipt">
+      <h2>Підсумок періоду</h2>
+      <div class="meta"><span>Змін</span><b id="s-n">—</b></div>
+      <div class="meta"><span>Брудними</span><b id="s-g">—</b></div>
+      <div class="meta minus"><span>Податок</span><b id="s-tax">—</b></div>
+      <div class="meta minus"><span>Пальне</span><b id="s-fuel">—</b></div>
+      <hr class="sep">
+      <div class="meta"><span>Чистими</span><b id="s-net">—</b></div>
+      <div class="meta"><span>Чистими в середньому за зміну</span><b id="s-avg">—</b></div>
+    </div>
+    <div class="card phcard">
+      <h2>Чистими за годину</h2>
+      <div class="phrow">
+        <div><small>День</small><b id="ph-day">—</b></div>
+        <div><small>Тиждень</small><b id="ph-week">—</b></div>
+        <div><small>Місяць</small><b id="ph-month">—</b></div>
+      </div>
+      <p class="note" id="ph-note"></p>
     </div>
     <div id="list"></div>
     <button class="btn ghost" id="csv">Завантажити CSV</button>
@@ -748,24 +809,78 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
   $('clear').addEventListener('click', () => resetForm(null));
 
   // ---------- історія ----------
+  let hUnit = store.get('gz_unit') || 'week', hOff = 0;
+  if (!['day','week','month'].includes(hUnit)) hUnit = 'week';
+  const isoD = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const base = (unit, off) => {
+    const t = new Date(); t.setHours(12,0,0,0);
+    if (unit === 'day') t.setDate(t.getDate() + off);
+    else if (unit === 'week') t.setDate(t.getDate() + off*7);
+    else { t.setDate(1); t.setMonth(t.getMonth() + off); }
+    return t;
+  };
+  function rangeAt(unit, d){
+    const a = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12);
+    let b;
+    if (unit === 'day') b = new Date(a);
+    else if (unit === 'week') { a.setDate(a.getDate() - ((a.getDay()+6)%7)); b = new Date(a); b.setDate(b.getDate()+6); }
+    else { a.setDate(1); b = new Date(a.getFullYear(), a.getMonth()+1, 0, 12); }
+    return { from: isoD(a), to: isoD(b), a, b };
+  }
+  function sumOf(r){
+    const l = shifts.filter(s => s.date >= r.from && s.date <= r.to);
+    const o = { l, n: l.length, km: 0, mins: 0, g: 0, tax: 0, fuel: 0, net: 0 };
+    l.forEach(s => { o.km += s.km; o.mins += s.mins; o.g += s.g; o.tax += s.tax; o.fuel += s.fuel; o.net += s.net; });
+    o.ph = o.mins ? o.net / (o.mins/60) : null;
+    return o;
+  }
+  const dm = d => `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}`;
+  const perH = v => v == null ? '—' : nf(v) + ' zł/год';
+
   function renderHistory(){
+    document.querySelectorAll('#h-seg button').forEach(b => b.classList.toggle('on', b.dataset.u === hUnit));
+    $('h-next').disabled = hOff >= 0;
+    const anchor = base(hUnit, hOff), r = rangeAt(hUnit, anchor), S = sumOf(r);
+    $('h-label').textContent = hUnit === 'day' ? fmtDate(r.from)
+      : hUnit === 'week' ? `${dm(r.a)} – ${dm(r.b)}.${r.b.getFullYear()}`
+      : r.a.toLocaleDateString('uk-UA', { month:'long', year:'numeric' });
+
+    $('t-km').textContent = nf(S.km,0);
+    $('t-h').textContent = nf(S.mins/60,1);
+    $('t-net').textContent = nf(S.net,0) + ' zł';
+    $('s-n').textContent = S.n;
+    $('s-g').textContent = zl(S.g);
+    $('s-tax').textContent = S.n ? '−' + nf(S.tax) + ' zł' : '—';
+    $('s-fuel').textContent = S.n ? '−' + nf(S.fuel) + ' zł' : '—';
+    $('s-net').textContent = zl(S.net);
+    $('s-avg').textContent = S.n ? zl(S.net / S.n) : '—';
+
+    const pd = rangeAt('day', anchor), pw = rangeAt('week', anchor), pm = rangeAt('month', anchor);
+    $('ph-day').textContent = perH(sumOf(pd).ph);
+    $('ph-week').textContent = perH(sumOf(pw).ph);
+    $('ph-month').textContent = perH(sumOf(pm).ph);
+    $('ph-note').textContent = 'Чистий заробіток (після податку й пального) на годину роботи. Рахується для обраного періоду: ' + $('h-label').textContent + '.';
+
     const list = $('list');
-    if (!shifts.length) {
-      list.innerHTML = '<div class="empty">Збережених змін ще немає.<br>Заповни форму на вкладці «Зміна» і збережи її.</div>';
+    if (!S.l.length) {
+      list.innerHTML = '<div class="empty">' + (shifts.length ? 'За цей період змін немає.' : 'Збережених змін ще немає.<br>Заповни форму на вкладці «Зміна» і збережи її.') + '</div>';
     } else {
-      list.innerHTML = shifts.map(s => `
+      list.innerHTML = S.l.map(s => `
         <div class="item">
           <div class="item-top"><span>${fmtDate(s.date)}</span><b>${zl(s.net)}</b></div>
           <div class="item-sub">${nf(s.km,1)} км · ${hm(s.mins)} · брудними ${zl(s.g)}</div>
-          <div class="item-sub">${s.tStart}–${s.tEnd} · пальне ${nf(s.fuel)} zł</div>
+          <div class="item-sub">${s.tStart}–${s.tEnd} · податок ${nf(s.tax)} zł · пальне ${nf(s.fuel)} zł</div>
+          <div class="item-sub" style="color:var(--cyan)">${s.mins ? nf(s.net / (s.mins/60)) + ' zł чистими за годину' : ''}</div>
           <button class="del" data-id="${s.id}">Видалити</button>
         </div>`).join('');
     }
-    const km = shifts.reduce((a,s)=>a+s.km,0), mins = shifts.reduce((a,s)=>a+s.mins,0), net = shifts.reduce((a,s)=>a+s.net,0);
-    $('t-km').textContent = nf(km,0);
-    $('t-h').textContent = nf(mins/60,1);
-    $('t-net').textContent = nf(net,0) + ' zł';
   }
+  $('h-seg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    hUnit = b.dataset.u; hOff = 0; store.set('gz_unit', hUnit); renderHistory();
+  });
+  $('h-prev').addEventListener('click', () => { hOff--; renderHistory(); });
+  $('h-next').addEventListener('click', () => { if (hOff < 0) { hOff++; renderHistory(); } });
   const fmtDate = d => { const [y,m,dd] = d.split('-'); return `${dd}.${m}.${y}`; };
 
   $('list').addEventListener('click', e => {
@@ -1870,8 +1985,27 @@ function renderHero(){
   const last=new Date(r.to+'T12:00:00');last.setDate(last.getDate()-1);
   $('#dateNow').textContent=(cfg.payDay||1)>1?fm(r.from)+' – '+fm(dstr(last)):new Date().toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
   $('#mIn').textContent=money(mi);$('#mOut').textContent=money(-mo).replace('−','');
-  renderPay();renderLimit();
+  renderPay();renderLimit();renderGlovo();
 }
+/* підсумок поточного тижня (пн–нд) з вбудованого Glovo */
+function renderGlovo(){
+  const el=$('#glw');if(!el)return;
+  let sh=[];try{sh=JSON.parse(store.get('gz_shifts')||'[]')}catch(e){}
+  const n=new Date(),a=new Date(n.getFullYear(),n.getMonth(),n.getDate()-((n.getDay()+6)%7)),b=new Date(a.getFullYear(),a.getMonth(),a.getDate()+6);
+  const from=dstr(a),to=dstr(b);
+  const l=sh.filter(s=>s.date>=from&&s.date<=to);
+  let km=0,mins=0,net=0;l.forEach(s=>{km+=s.km||0;mins+=s.mins||0;net+=s.net||0});
+  const f=(v,d=2)=>new Intl.NumberFormat('uk-UA',{minimumFractionDigits:d,maximumFractionDigits:d}).format(v);
+  const fm=d=>pad(d.getDate())+'.'+pad(d.getMonth()+1);
+  $('#glwRange').textContent=fm(a)+' – '+fm(b)+(l.length?' · змін: '+l.length:'');
+  const nt=$('#glwNet');
+  nt.textContent=(net<0?'−':'')+f(Math.abs(net))+' zł';
+  nt.classList.toggle('neg',net<0);
+  $('#glwPh').textContent=mins?f(net/(mins/60))+' zł':'—';
+  $('#glwH').textContent=f(mins/60,1)+' год';
+  $('#glwKm').textContent=f(km,0)+' км';
+}
+window.addEventListener('storage',e=>{if(e.key==='gz_shifts')renderGlovo()});
 const idTime=id=>{const n=parseInt(String(id).slice(0,8),36);return n>1.5e12&&n<4e12?n:0};
 function badDateTx(){return tx.filter(t=>{const c=idTime(t.id);return c&&Math.abs(new Date(t.date+'T12:00:00')-c)/864e5>200})}
 function renderList(){
@@ -2768,6 +2902,7 @@ function openGlovo(){
   f.srcdoc=GLOVO_HTML;
 }
 $('#aGlovo').onclick=()=>openPage('glovo');
+$('#glw').onclick=()=>openPage('glovo');
 
 /* ---------- AI-агент: керування всім додатком ---------- */
 const trBase=()=>({profile:{},workouts:[],weights:[],meals:[],nutrition:null,plans:[],chat:[]});
