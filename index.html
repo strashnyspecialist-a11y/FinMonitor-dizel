@@ -528,6 +528,11 @@ button{font:inherit;cursor:pointer}
 .pnav button{width:44px;min-height:40px;border:1px solid var(--cyan);border-radius:10px;background:transparent;color:var(--cyan);font-size:1.3rem;font-weight:700}
 .pnav button:disabled{opacity:.3}
 .pnav span{font-weight:600;text-align:center;flex:1;text-transform:capitalize}
+.editbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;padding:10px 12px;border:1px solid var(--lime);border-radius:10px;background:rgba(184,255,59,.08);box-shadow:0 0 10px rgba(184,255,59,.3);font-size:.9rem}
+.editbar[hidden]{display:none}
+.editbar button{flex:0 0 auto;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--muted);font-weight:600}
+.item-act{display:flex;gap:22px}
+.edt{background:none;border:0;color:var(--cyan);font-size:.85rem;padding:6px 0;margin-top:4px;min-height:36px}
 .phcard h2{margin-bottom:10px}
 .phrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .phrow div{border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
@@ -550,6 +555,10 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
 <main>
   <!-- ЗМІНА -->
   <section class="view active" id="view-shift">
+    <div class="editbar" id="edit-banner" hidden>
+      <span>✏️ Редагування зміни <b id="edit-date"></b></span>
+      <button id="edit-cancel" type="button">Скасувати</button>
+    </div>
     <div class="card">
       <h2>Дані зміни</h2>
       <div class="field">
@@ -749,9 +758,9 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
   function calc(){
     const ks = num('kmStart'), ke = num('kmEnd'), g = num('gross');
     const ts = $('tStart').value, te = $('tEnd').value;
-    const taxP = parseFloat(settings.tax) || 0;
-    const price = parseFloat(String(settings.price).replace(',', '.')) || 0;
-    const cons = parseFloat(String(settings.cons).replace(',', '.')) || 0;
+    const taxP = editSrc ? (editSrc.taxP || 0) : (parseFloat(settings.tax) || 0);
+    const price = editSrc ? (editSrc.price || 0) : (parseFloat(String(settings.price).replace(',', '.')) || 0);
+    const cons = editSrc ? (editSrc.cons || 0) : (parseFloat(String(settings.cons).replace(',', '.')) || 0);
 
     const km = (ks != null && ke != null) ? ke - ks : null;
     let mins = null;
@@ -786,15 +795,53 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
     calc.last = res ? { km, mins, g, taxP, price, cons, ...res } : null;
   }
 
+  // ---------- редагування збереженої зміни ----------
+  let editId = null, editSrc = null;
+  function setEditUI(){
+    $('edit-banner').hidden = editId == null;
+    $('save').textContent = editId == null ? 'Зберегти зміну' : 'Зберегти зміни';
+    $('clear').textContent = editId == null ? 'Очистити форму' : 'Скасувати редагування';
+  }
+  function exitEdit(){ editId = null; editSrc = null; setEditUI(); }
+  function cancelEdit(){
+    const was = editId != null;
+    exitEdit();
+    resetForm(was && shifts.length ? shifts[0].kmEnd : null);
+  }
+  function startEdit(id){
+    const s = shifts.find(x => String(x.id) === String(id)); if (!s) return;
+    editId = s.id; editSrc = s;
+    $('date').value = s.date;
+    $('kmStart').value = s.kmStart ?? '';
+    $('kmEnd').value = s.kmEnd ?? '';
+    $('tStart').value = s.tStart || '';
+    $('tEnd').value = s.tEnd || '';
+    $('gross').value = s.g ?? '';
+    $('hint-kmStart').textContent = ''; $('hint-kmEnd').textContent = '';
+    $('edit-date').textContent = fmtDate(s.date);
+    setEditUI(); calc();
+    document.querySelector('nav button[data-view="shift"]').click();
+  }
+
   $('save').addEventListener('click', () => {
     const r = calc.last; if (!r) return;
-    shifts.unshift({
+    const rec = {
       id: Date.now(), date: $('date').value, kmStart: num('kmStart'), kmEnd: num('kmEnd'),
       tStart: $('tStart').value, tEnd: $('tEnd').value, ...r
-    });
-    store.set('gz_shifts', JSON.stringify(shifts));
-    const keepEnd = num('kmEnd');
-    resetForm(keepEnd);
+    };
+    if (editId != null) {
+      const i = shifts.findIndex(x => x.id === editId);
+      if (i >= 0) { rec.id = editId; shifts[i] = rec; } else shifts.unshift(rec);
+      shifts.sort((a, b) => b.date.localeCompare(a.date) || (b.id - a.id));
+      store.set('gz_shifts', JSON.stringify(shifts));
+      exitEdit();
+      resetForm(shifts.length ? shifts[0].kmEnd : null);
+    } else {
+      shifts.unshift(rec);
+      store.set('gz_shifts', JSON.stringify(shifts));
+      const keepEnd = num('kmEnd');
+      resetForm(keepEnd);
+    }
     document.querySelector('nav button[data-view="history"]').click();
   });
 
@@ -806,7 +853,8 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
     $('date').value = today();
     calc();
   }
-  $('clear').addEventListener('click', () => resetForm(null));
+  $('clear').addEventListener('click', () => { if (editId != null) cancelEdit(); else resetForm(null); });
+  $('edit-cancel').addEventListener('click', cancelEdit);
 
   // ---------- історія ----------
   let hUnit = store.get('gz_unit') || 'week', hOff = 0;
@@ -871,7 +919,7 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
           <div class="item-sub">${nf(s.km,1)} км · ${hm(s.mins)} · брудними ${zl(s.g)}</div>
           <div class="item-sub">${s.tStart}–${s.tEnd} · податок ${nf(s.tax)} zł · пальне ${nf(s.fuel)} zł</div>
           <div class="item-sub" style="color:var(--cyan)">${s.mins ? nf(s.net / (s.mins/60)) + ' zł чистими за годину' : ''}</div>
-          <button class="del" data-id="${s.id}">Видалити</button>
+          <div class="item-act"><button class="edt" data-id="${s.id}">Редагувати</button><button class="del" data-id="${s.id}">Видалити</button></div>
         </div>`).join('');
     }
   }
@@ -884,8 +932,11 @@ nav button[aria-selected="true"]{color:var(--pink);border-top-color:var(--pink);
   const fmtDate = d => { const [y,m,dd] = d.split('-'); return `${dd}.${m}.${y}`; };
 
   $('list').addEventListener('click', e => {
+    const eb = e.target.closest('.edt');
+    if (eb) { startEdit(eb.dataset.id); return; }
     const b = e.target.closest('.del'); if (!b) return;
     if (!confirm('Видалити цю зміну?')) return;
+    if (editId != null && String(editId) === b.dataset.id) { exitEdit(); resetForm(null); }
     shifts = shifts.filter(s => String(s.id) !== b.dataset.id);
     store.set('gz_shifts', JSON.stringify(shifts));
     renderHistory();
